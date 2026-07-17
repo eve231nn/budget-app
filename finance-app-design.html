@@ -1,0 +1,2750 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101314" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Бюджет" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <title>Budget 2026 — прототип</title>
+  <style>
+    :root {
+      --ink: #17191a;
+      --muted: #777b7d;
+      --paper: #f4f3ef;
+      --surface: #fcfbf8;
+      --line: #deddd7;
+      --dark: #293633;
+      --dark-soft: #34423f;
+      --summary-start: #52645f;
+      --summary-mid: #435550;
+      --summary-end: #344541;
+      --summary-gradient: linear-gradient(135deg, var(--summary-start) 0%, var(--summary-mid) 48%, var(--summary-end) 100%);
+      --emerald: #1f8c72;
+      --emerald-soft: #dcece6;
+      --coral: #c55a4d;
+      --coral-soft: #f3e2de;
+      --gold: #b79a62;
+      --gold-soft: #eee8db;
+      --shadow: 0 30px 80px rgba(18, 21, 22, 0.18);
+      --number-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Avenir Next", Avenir, "Century Gothic", sans-serif;
+      background:
+        linear-gradient(90deg, rgba(16, 19, 20, 0.025) 1px, transparent 1px),
+        linear-gradient(rgba(16, 19, 20, 0.025) 1px, transparent 1px),
+        #e8e7e2;
+      background-size: 32px 32px;
+      font-variant-numeric: lining-nums tabular-nums;
+      font-feature-settings: "lnum" 1, "tnum" 1;
+    }
+
+    button, input, select { font: inherit; }
+    input[inputmode="decimal"], input[inputmode="numeric"] {
+      font-family: var(--number-font);
+      font-variant-numeric: lining-nums tabular-nums;
+      font-feature-settings: "lnum" 1, "tnum" 1;
+      letter-spacing: 0;
+    }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .showcase {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 30px;
+    }
+
+    .prototype {
+      width: min(1180px, 100%);
+      display: grid;
+      grid-template-columns: minmax(360px, 430px) minmax(280px, 1fr);
+      gap: 54px;
+      align-items: center;
+    }
+
+    .device {
+      width: 100%;
+      aspect-ratio: 9 / 19.5;
+      min-height: 690px;
+      max-height: 880px;
+      padding: 10px;
+      border-radius: 42px;
+      background: linear-gradient(150deg, #3b3f40 0%, #111415 42%, #292d2e 100%);
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+      position: relative;
+    }
+
+    .device::before {
+      content: "";
+      position: absolute;
+      width: 112px;
+      height: 28px;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 20px;
+      background: #090b0c;
+      z-index: 20;
+    }
+
+    .viewport {
+      height: 100%;
+      overflow: hidden;
+      border-radius: 34px;
+      background: var(--paper);
+      position: relative;
+    }
+
+    .statusbar {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 48px;
+      padding: 13px 22px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 15;
+      pointer-events: none;
+      transition: color 260ms ease;
+    }
+
+    .viewport.settings-open .statusbar,
+    .viewport.investments-open .statusbar,
+    .viewport.statistics-open .statusbar { color: var(--ink); }
+
+    .status-icons { display: flex; gap: 5px; align-items: center; }
+    .signal { letter-spacing: -2px; }
+    .battery {
+      width: 20px;
+      height: 9px;
+      border: 1px solid currentColor;
+      border-radius: 3px;
+      position: relative;
+    }
+    .battery::before { content: ""; position: absolute; inset: 2px; background: currentColor; border-radius: 1px; }
+    .battery::after { content: ""; position: absolute; right: -3px; top: 2px; width: 2px; height: 4px; background: currentColor; border-radius: 0 2px 2px 0; }
+
+    .screen-track {
+      height: 100%;
+      display: flex;
+      transition: transform 520ms cubic-bezier(.22, 1, .36, 1);
+      will-change: transform;
+    }
+
+    .viewport.settings-open .screen-track { transform: translateX(-25%); }
+    .viewport.investments-open .screen-track { transform: translateX(-50%); }
+    .viewport.statistics-open .screen-track { transform: translateX(-75%); }
+
+    .app-screen {
+      flex: 0 0 25%;
+      width: 25%;
+      height: 100%;
+      overflow-y: auto;
+      scrollbar-width: none;
+      position: relative;
+      background: var(--paper);
+    }
+    .app-screen::-webkit-scrollbar { display: none; }
+
+    .screen-track { width: 400%; }
+
+    .home-header {
+      min-height: 344px;
+      padding: 60px 22px 18px;
+      color: var(--ink);
+      background: var(--paper);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .home-header::before, .home-header::after { display: none; }
+
+    .eyebrow-row, .page-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 50%;
+      color: #d8c398;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 12px;
+    }
+
+    .period {
+      color: rgba(255, 255, 255, .56);
+      font-size: 11px;
+    }
+
+    .balance-block {
+      margin-top: 42px;
+      padding: 18px 19px 20px;
+      border-radius: 8px;
+      color: white;
+      background: var(--summary-gradient);
+      box-shadow: 0 14px 30px rgba(52,69,65,.18), inset 0 1px 0 rgba(255,255,255,.1);
+      position: relative;
+      z-index: 1;
+    }
+    .capital-shortcut {
+      position: absolute;
+      top: 58px;
+      right: 22px;
+      z-index: 5;
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      color: #40504c;
+      background: #e8eeeb;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .capital-shortcut svg { width: 15px; height: 15px; }
+    .balance-label {
+      color: rgba(255,255,255,.6);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .balance {
+      margin: 10px 0 6px;
+      font-family: var(--number-font);
+      font-size: clamp(39px, 10vw, 49px);
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: 0;
+      white-space: nowrap;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    .balance small { font: inherit; color: inherit; }
+    .net-result { color: #91c9b8; font-size: 12px; }
+
+    .quick-actions {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .action-button {
+      min-height: 64px;
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 180ms ease, transform 180ms ease;
+    }
+    .action-button:hover { background: #efeee9; }
+    .action-button:active { transform: scale(.98); }
+    .action-icon {
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #ecebe6;
+    }
+    .action-button.income .action-icon { color: var(--emerald); background: var(--emerald-soft); }
+    .action-button.expense .action-icon { color: var(--coral); background: var(--coral-soft); }
+    .action-copy strong { display: block; font-size: 12px; }
+    .action-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+
+    .home-content { position: relative; padding: 4px 18px 94px; background: var(--paper); }
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin: 2px 2px 12px;
+    }
+    .section-title h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 400;
+    }
+    .section-title span { color: var(--muted); font-size: 10px; }
+
+    .month-plan {
+      padding: 17px;
+      border: 1px solid #d6d7d1;
+      border-radius: 8px;
+      background: #fbfaf7;
+      box-shadow: 0 8px 22px rgba(23,25,26,.045);
+    }
+    .plan-summary { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .plan-summary strong { display: block; font-family: var(--number-font); font-size: 26px; font-weight: 500; }
+    .plan-summary small { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .budget-badge { padding: 6px 9px; border-radius: 999px; color: #6c5b3a; background: var(--gold-soft); font-size: 9px; white-space: nowrap; }
+    .progress { height: 5px; margin: 17px 0 15px; border-radius: 4px; overflow: hidden; background: #e4e2dc; }
+    .progress span { display: block; width: 0; height: 100%; background: var(--emerald); border-radius: 4px; transition: width 280ms ease, background 180ms ease; }
+    .plan-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .plan-meta b { color: var(--ink); }
+
+    .year-strip {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .metric { padding: 14px; }
+    button.metric { border: 0; color: var(--ink); background: transparent; text-align: left; cursor: pointer; transition: background 180ms ease; }
+    button.metric:hover { background: #f0eee8; }
+    button.metric:active { background: #e9e6df; }
+    .metric + .metric { border-left: 1px solid var(--line); }
+    .metric span { display: block; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+    .metric strong { display: block; margin-top: 7px; font-family: var(--number-font); font-size: 17px; font-weight: 500; }
+    .metric.in strong { color: var(--emerald); }
+    .metric.out strong { color: var(--coral); }
+
+    .statistics-link {
+      width: 100%;
+      margin-top: 12px;
+      padding: 15px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .statistics-link svg { width: 21px; height: 21px; fill: none; stroke: var(--emerald); stroke-width: 1.8; }
+    .statistics-link span { flex: 1; }
+    .statistics-link strong { display: block; font-size: 14px; }
+    .statistics-link small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .statistics-link .chevron { flex: 0 0 auto; width: 17px; stroke: var(--muted); }
+
+    .statistics-screen { padding: 48px 0 0; overflow: hidden; display: flex; flex-direction: column; }
+    .statistics-fixed {
+      position: relative;
+      z-index: 3;
+      flex: 0 0 auto;
+      padding: 10px 18px 12px;
+      background: var(--paper);
+      box-shadow: 0 10px 18px rgba(16,19,20,.07);
+    }
+    .statistics-fixed::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 -10px;
+      height: 10px;
+      background: linear-gradient(180deg, rgba(246,245,241,.92), rgba(246,245,241,0));
+      pointer-events: none;
+    }
+    .statistics-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 5px 18px 30px; scrollbar-width: none; overscroll-behavior: contain; }
+    .statistics-scroll::-webkit-scrollbar { display: none; }
+    .statistics-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .statistics-toolbar .page-top { padding: 0; flex: 1; }
+    .statistics-year { width: 82px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); }
+    .statistics-summary { margin-top: 20px; padding: 16px; border-radius: 8px; color: white; background: var(--summary-gradient); box-shadow: 0 12px 26px rgba(52,69,65,.16), inset 0 1px 0 rgba(255,255,255,.1); }
+    .statistics-summary > span { color: rgba(255,255,255,.62); font-size: 9px; text-transform: uppercase; }
+    .statistics-net { display: block; margin-top: 6px; font-family: var(--number-font); font-size: 28px; font-weight: 400; font-variant-numeric: tabular-nums; }
+    .statistics-month-result { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.14); }
+    .statistics-month-result span { color: rgba(255,255,255,.62); font-size: 10px; }
+    .statistics-month-result strong { font-family: var(--number-font); font-size: 16px; font-weight: 400; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .statistics-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.14); }
+    .statistics-totals span { display: block; color: rgba(255,255,255,.58); font-size: 9px; }
+    .statistics-totals strong { display: block; margin-top: 4px; font-family: var(--number-font); font-size: 15px; font-weight: 400; font-variant-numeric: tabular-nums; }
+    .statistics-tabs { margin-top: 14px; }
+    .statistics-panel { display: none; margin-top: 8px; }
+    .statistics-panel.active { display: block; }
+    .monthly-stat-row, .category-stat-row { padding: 13px 0; border-bottom: 1px solid var(--line); }
+    button.monthly-stat-row { width: 100%; margin: 0 -7px; padding-inline: 7px; color: var(--ink); background: transparent; border-width: 0 0 1px; border-radius: 6px; text-align: left; cursor: pointer; touch-action: pan-y; transition: background 140ms ease, box-shadow 140ms ease, transform 140ms ease; }
+    button.monthly-stat-row:hover { background: #ecefeb; }
+    button.monthly-stat-row:active, button.monthly-stat-row.touching { background: #e2e9e5; box-shadow: inset 3px 0 0 var(--gold); transform: scale(.992); }
+    .monthly-stat-head { display: grid; grid-template-columns: 40px 1fr 1fr; gap: 8px; align-items: baseline; }
+    .monthly-stat-head strong { font-size: 12px; }
+    .monthly-stat-head span { text-align: right; font-family: var(--number-font); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .monthly-stat-head .income-value { color: var(--emerald); }
+    .monthly-stat-head .expense-value { color: var(--coral); }
+    .dual-bars { display: grid; gap: 3px; margin: 8px 0 5px 48px; }
+    .dual-bars i { display: block; height: 3px; border-radius: 3px; }
+    .dual-bars .income-bar { background: var(--emerald); }
+    .dual-bars .expense-bar { background: var(--coral); }
+    .month-net { display: block; text-align: right; color: var(--muted); font-size: 9px; }
+    .category-stat-head { display: flex; justify-content: space-between; gap: 12px; }
+    .category-stat-head strong { font-size: 12px; }
+    .category-stat-head span { color: var(--muted); font-family: var(--number-font); font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .category-months { display: grid; gap: 6px; margin-top: 10px; }
+    .category-month { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .category-month strong { color: var(--ink); font-family: var(--number-font); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; }
+    .category-empty { display: block; margin-top: 8px; color: var(--muted); font-size: 10px; }
+    .history-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .history-row strong { display: block; font-size: 11px; }
+    .history-row small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .history-row > span { font-family: var(--number-font); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .history-row.income > span { color: var(--emerald); }
+    .history-row.expense > span { color: var(--coral); }
+
+    .balance, .net-result, .plan-summary strong, .plan-meta b, .metric strong,
+    .data-note strong, .investment-summary strong, .investment-summary small,
+    .broker-value strong, .broker-value span, .amount-input, .investment-field input,
+    .category-copy span, .stats-total, .stats-value, .asset-value, .fund-input,
+    .statistics-year, .year-select, .statistics-net, .statistics-month-result strong,
+    .statistics-totals strong, .monthly-stat-head span, .month-net,
+    .category-stat-head span, .category-month strong, .month-column b,
+    .budget-badge, #planPeriod, .statusbar, .broker-name span, .asset-copy span {
+      font-family: var(--number-font);
+      font-variant-numeric: lining-nums tabular-nums;
+      font-feature-settings: "lnum" 1, "tnum" 1;
+      letter-spacing: 0;
+    }
+
+    .fab {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      z-index: 12;
+      width: 56px;
+      height: 56px;
+      border: 0;
+      border-radius: 50%;
+      color: #e2cfaa;
+      background: var(--dark);
+      box-shadow: 0 14px 28px rgba(16,19,20,.27);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .fab:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(16,19,20,.34); }
+    .fab:active { transform: scale(.95); }
+
+    .settings-screen { padding: 58px 18px 38px; }
+    .settings-screen .status-spacer { display: none; }
+    .settings-screen .page-top { margin-bottom: 28px; }
+    .settings-screen .page-heading h1 { font-size: 21px; line-height: 1.08; }
+    .income-row .category-copy span { display: none; }
+    .back-button, .icon-button {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: var(--surface);
+      cursor: pointer;
+    }
+    .page-heading { flex: 1; }
+    .page-heading span { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .14em; }
+    .page-heading h1 { margin: 4px 0 0; font-family: Georgia, "Times New Roman", serif; font-size: 28px; font-weight: 400; }
+
+    .settings-nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #e9e7e1;
+    }
+    .tab-button {
+      height: 38px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .tab-button.active { color: var(--ink); background: var(--surface); box-shadow: 0 3px 12px rgba(16,19,20,.08); }
+
+    .tab-panel { display: none; padding-top: 21px; }
+    .tab-panel.active { display: block; animation: reveal 240ms ease both; }
+    @keyframes reveal { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+    .settings-intro { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 14px; }
+    .settings-intro h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 20px; font-weight: 400; }
+    .settings-intro p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .add-category {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      border: 0;
+      border-radius: 50%;
+      color: white;
+      background: var(--dark);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .add-list-row {
+      width: 100%;
+      min-height: 54px;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 10px;
+    }
+    .add-list-row .add-category { width: 32px; height: 32px; flex: 0 0 32px; }
+    .plan-toggle-row { margin-top: 24px; padding: 15px 0; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .plan-toggle-row strong { display: block; font-size: 11px; }
+    .plan-toggle-row span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .switch { position: relative; width: 48px; height: 28px; flex: 0 0 48px; display: block; align-self: center; }
+    .switch input { position: absolute; opacity: 0; pointer-events: none; }
+    .switch-track { position: absolute; inset: 0; border: 1px solid var(--line); border-radius: 16px; background: white; cursor: pointer; transition: background 180ms ease, border-color 180ms ease; }
+    .switch-track::after { content: ""; position: absolute; top: 50%; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: #a9aeab; box-shadow: 0 1px 4px rgba(16,19,20,.18); transform: translateY(-50%); transition: transform 180ms ease, background 180ms ease; }
+    .switch input:checked + .switch-track { border-color: var(--dark); background: var(--dark); }
+    .switch input:checked + .switch-track::after { background: white; transform: translate(22px, -50%); }
+    .plan-disabled .plan-title, .plan-disabled .month-plan { display: none; }
+    .plan-disabled #expenseList .category-row { grid-template-columns: 34px 1fr; }
+    .plan-disabled #expenseList .plan-input { display: none; }
+
+    .settings-hub, .settings-subpage { min-height: 100%; }
+    .settings-subpage { display: none; }
+    .settings-screen.settings-subpage-open .settings-hub { display: none; }
+    .settings-screen.settings-subpage-open .settings-subpage.active { display: block; }
+    .settings-menu { margin-top: 24px; border-top: 1px solid var(--line); }
+    .settings-menu-button {
+      width: 100%; min-height: 70px; padding: 0; border: 0; border-bottom: 1px solid var(--line);
+      background: transparent; color: var(--ink); display: grid; grid-template-columns: 38px 1fr 18px;
+      align-items: center; gap: 12px; text-align: left; cursor: pointer;
+    }
+    .settings-menu-icon { width: 36px; height: 36px; border-radius: 50%; background: #e5e6e3; display: grid; place-items: center; color: var(--dark); }
+    .settings-menu-icon svg, .settings-menu-chevron { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .settings-menu-copy strong { display: block; font-size: 12px; }
+    .settings-menu-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .settings-menu-chevron { color: var(--muted); }
+    .settings-note { margin: 22px 0 0; padding: 14px 15px; background: #e9eae7; border-radius: 8px; color: var(--muted); font-size: 9px; line-height: 1.55; }
+    .settings-section { margin-top: 24px; }
+    .settings-action { width: 100%; min-height: 46px; margin-top: 10px; border: 0; border-radius: 7px; background: var(--dark); color: white; font: inherit; font-size: 11px; cursor: pointer; }
+    .settings-action.secondary { border: 1px solid var(--line); background: white; color: var(--ink); }
+    .settings-status { padding: 16px; background: #e9eae7; border-radius: 8px; }
+    .settings-status strong { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weight: 400; }
+    .settings-status span { display: block; margin-top: 6px; color: var(--muted); font-size: 9px; line-height: 1.5; }
+
+    .category-list { border-top: 1px solid var(--line); overflow: hidden; }
+    .swipe-item {
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
+      touch-action: pan-y;
+    }
+    .swipe-actions {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 152px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+    .swipe-item.open .swipe-actions { pointer-events: auto; opacity: 1; }
+    .swipe-action {
+      border: 0;
+      color: white;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1.1;
+      appearance: none;
+    }
+    .swipe-action svg { width: 16px; height: 16px; }
+    .swipe-action.rename { background: #6f746f; }
+    .swipe-action.delete { background: var(--coral); }
+    .swipe-content {
+      position: relative;
+      z-index: 2;
+      background: var(--paper);
+      transform: translateX(0);
+      transition: transform 260ms cubic-bezier(.22, 1, .36, 1);
+      user-select: none;
+    }
+    .swipe-item.open .swipe-content { transform: translateX(152px); }
+    .swipe-item.removing { max-height: 0; opacity: 0; transition: max-height 260ms ease, opacity 180ms ease; }
+    .category-row {
+      min-height: 62px;
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 11px;
+      border-bottom: 0;
+    }
+    .category-symbol {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: var(--gold-soft);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 13px;
+    }
+    .swipe-item:nth-child(2n) .category-symbol { background: var(--emerald-soft); }
+    .category-copy strong { display: block; font-size: 11px; }
+    .category-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .amount-input {
+      width: 92px;
+      height: 34px;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--ink);
+      background: var(--surface);
+      text-align: right;
+      font-size: 10px;
+      outline: none;
+      pointer-events: none;
+      border-color: transparent;
+      background: transparent;
+    }
+    .category-row .category-copy span { display: none; }
+
+    .income-row { min-height: 58px; display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 11px; border-bottom: 0; }
+
+    .save-button {
+      width: 100%;
+      height: 48px;
+      margin-top: 20px;
+      border: 0;
+      border-radius: 8px;
+      color: white;
+      background: var(--dark);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .investments-screen { padding: 48px 0 0; overflow: hidden; }
+    .broker-overview { height: 100%; display: flex; flex-direction: column; }
+    .capital-sticky {
+      position: relative;
+      z-index: 3;
+      flex: 0 0 auto;
+      padding: 10px 18px 12px;
+      background: var(--paper);
+      box-shadow: 0 10px 18px rgba(16,19,20,.07);
+    }
+    .capital-sticky::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 -10px;
+      height: 10px;
+      background: linear-gradient(180deg, rgba(244,243,239,.94), rgba(244,243,239,0));
+      pointer-events: none;
+    }
+    .capital-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 3px 18px 38px; scrollbar-width: none; overscroll-behavior: contain; }
+    .capital-scroll::-webkit-scrollbar { display: none; }
+    .capital-sticky .page-top { margin-bottom: 18px; }
+    .investment-summary {
+      padding: 18px;
+      border-radius: 8px;
+      color: white;
+      background: var(--summary-gradient);
+      box-shadow: 0 12px 30px rgba(52,69,65,.18), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    .investment-summary span { color: rgba(255,255,255,.56); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
+    .investment-summary strong { display: block; margin-top: 8px; font-family: var(--number-font); font-size: 28px; font-weight: 500; font-variant-numeric: lining-nums tabular-nums; }
+    .investment-summary small { display: block; margin-top: 6px; color: #91c9b8; font-size: 10px; }
+    .broker-heading { display: flex; align-items: end; justify-content: space-between; margin: 22px 0 10px; }
+    .broker-heading h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 20px; font-weight: 400; }
+    .broker-heading p { margin: 4px 0 0; color: var(--muted); font-size: 9px; }
+    .broker-list { border-top: 1px solid var(--line); }
+    .broker-row {
+      width: 100%;
+      min-height: 70px;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      background: transparent;
+      display: grid;
+      grid-template-columns: 38px 1fr auto 18px;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .broker-logo { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #6c5b3a; background: var(--gold-soft); font-family: Georgia, "Times New Roman", serif; }
+    .broker-row:nth-child(2) .broker-logo { color: #176d5a; background: var(--emerald-soft); }
+    .broker-row:nth-child(3) .broker-logo { color: #91493f; background: var(--coral-soft); }
+    .broker-name strong { display: block; font-size: 11px; }
+    .broker-name span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .broker-value { text-align: right; }
+    .broker-value strong { display: block; font-family: var(--number-font); font-size: 14px; font-weight: 500; }
+    .broker-value span { display: block; margin-top: 3px; color: var(--emerald); font-size: 8px; }
+    .broker-row > svg { width: 15px; height: 15px; color: #999c9a; }
+    .broker-detail { display: none; }
+    .investments-screen.detail-open .broker-overview { display: none; }
+    .investments-screen.detail-open .broker-detail { display: block; height: 100%; padding: 10px 18px 38px; overflow-y: auto; animation: reveal 240ms ease both; }
+    .detail-card { padding: 17px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+    .detail-card + .detail-card { margin-top: 10px; }
+    .detail-card h2 { margin: 0 0 14px; font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weight: 400; }
+    .investment-field { display: grid; grid-template-columns: 1fr 110px; align-items: center; gap: 12px; min-height: 48px; border-top: 1px solid var(--line); }
+    .investment-field:first-of-type { border-top: 0; }
+    .investment-field label { font-size: 10px; }
+    .investment-field input {
+      width: 100%;
+      height: 34px;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--ink);
+      background: var(--paper);
+      text-align: right;
+      font-size: 10px;
+      outline: none;
+    }
+    .investment-field input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(183,154,98,.14); }
+    .broker-balance-card { padding: 18px; border-radius: 8px; color: white; background: var(--summary-gradient); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+    .balance-block, .statistics-summary, .investment-summary, .broker-balance-card {
+      background-size: 180% 180%;
+      animation: summary-shimmer 12s ease-in-out infinite alternate;
+    }
+    @keyframes summary-shimmer {
+      from { background-position: 0% 50%; }
+      to { background-position: 100% 50%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .balance-block, .statistics-summary, .investment-summary, .broker-balance-card { animation: none; }
+    }
+    .broker-balance-card span { color: rgba(255,255,255,.58); font-size: 9px; text-transform: uppercase; }
+    .broker-balance-card strong { display: block; margin-top: 7px; font-family: var(--number-font); font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .broker-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+    .broker-action {
+      min-height: 52px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--surface);
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      align-items: center;
+      gap: 9px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 10px;
+    }
+    .broker-action strong { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #ecebe6; font-size: 15px; line-height: 1; }
+    .broker-action span { display: block; line-height: 1.25; }
+    .broker-action[data-broker-action="deposit"] { color: white; border-color: var(--dark); background: var(--dark); }
+    .broker-action[data-broker-action="deposit"] strong { color: #34423f; background: #b8d8ce; }
+    .broker-action[data-broker-action="withdraw"] strong { color: #7b6540; background: var(--gold-soft); }
+    .broker-action[data-broker-action="income"] strong { color: var(--emerald); background: var(--emerald-soft); }
+    .broker-action[data-broker-action="charge"] strong { color: var(--coral); background: var(--coral-soft); }
+    .broker-revalue {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 8px;
+      padding: 0 12px;
+      border: 1px solid #cfd5d2;
+      border-radius: 8px;
+      color: #40504c;
+      background: #e8eeeb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .broker-revalue small { color: #71807c; font-size: 9px; font-weight: 400; }
+    .broker-history { margin-top: 22px; }
+    .broker-history h2 { margin: 0 0 8px; font-family: Georgia, "Times New Roman", serif; font-size: 20px; font-weight: 400; }
+    .broker-history-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .broker-history-row strong { display: block; font-size: 11px; }
+    .broker-history-row small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .broker-history-row > span { font-family: var(--number-font); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .broker-history-row.positive > span { color: var(--emerald); }
+    .broker-history-row.negative > span { color: var(--coral); }
+
+    .capital-nav { margin: 14px 0 0; }
+    .capital-panel { display: none; }
+    .capital-panel.active { display: block; animation: reveal 240ms ease both; }
+    .asset-list { border-top: 1px solid var(--line); }
+    .asset-row {
+      min-height: 66px;
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: 11px;
+      border-bottom: 1px solid var(--line);
+    }
+    .asset-icon { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #51615e; background: #dfe7e4; font-family: var(--number-font); }
+    .asset-copy strong { display: block; font-size: 11px; }
+    .asset-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .asset-value { font-size: 13px; white-space: nowrap; }
+    .liability-row { cursor: pointer; }
+    .empty-note { padding: 18px 2px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 10px; }
+    .fund-list { border-top: 1px solid var(--line); }
+    .fund-row { min-height: 55px; display: grid; grid-template-columns: 34px 1fr 104px; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+    .fund-input {
+      width: 104px;
+      height: 34px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--ink);
+      background: var(--surface);
+      text-align: right;
+      font-family: var(--number-font);
+      font-variant-numeric: lining-nums tabular-nums;
+      font-size: 10px;
+      outline: none;
+      pointer-events: none;
+      border-color: transparent;
+      background: transparent;
+    }
+    .broker-row.swipe-content,
+    .asset-row.swipe-content,
+    .fund-row.swipe-content { border-bottom: 0; background: var(--paper); }
+    .broker-list .swipe-item:nth-child(2) .broker-logo { color: #176d5a; background: var(--emerald-soft); }
+    .broker-list .swipe-item:nth-child(3) .broker-logo { color: #91493f; background: var(--coral-soft); }
+
+    .stats-sheet { padding-bottom: 28px; }
+    .stats-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+    .stats-head-controls { display: flex; align-items: center; gap: 7px; }
+    .stats-period-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; margin-top: 16px; border-radius: 7px; background: #e9e7e1; }
+    .stats-period-toggle button { height: 34px; border: 0; border-radius: 5px; color: var(--muted); background: transparent; cursor: pointer; font-size: 10px; }
+    .stats-period-toggle button.active { color: var(--ink); background: var(--surface); box-shadow: 0 2px 8px rgba(16,19,20,.08); }
+    .stats-total { margin-top: 20px; font-size: 34px; line-height: 1; }
+    .stats-total-row { display: flex; align-items: end; justify-content: space-between; gap: 14px; margin-top: 20px; }
+    .stats-total-row .stats-total { margin-top: 0; }
+    .year-select {
+      height: 34px;
+      padding: 0 28px 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--number-font);
+      font-variant-numeric: tabular-nums;
+      font-size: 11px;
+      outline: none;
+    }
+    .stats-caption { margin-top: 6px; color: var(--muted); font-size: 9px; }
+    .stats-content { margin-top: 22px; }
+    .stats-annual { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stats-annual-item { padding: 13px; border: 1px solid var(--line); border-radius: 7px; }
+    .stats-annual-item span { display: block; color: var(--muted); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
+    .stats-value { display: block; margin-top: 7px; font-size: 15px; font-weight: 400; }
+    .monthly-chart { height: 170px; display: none; align-items: end; gap: 8px; padding-top: 10px; border-bottom: 1px solid var(--line); }
+    .monthly-chart.active { display: flex; }
+    .month-column { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+    .month-bar { width: 100%; min-height: 4px; border-radius: 3px 3px 0 0; background: var(--emerald); transition: height 320ms ease; }
+    .stats-expense .month-bar { background: var(--coral); }
+    .month-column span { color: var(--muted); font-size: 8px; }
+    .month-column b { font-family: var(--number-font); font-size: 7px; font-weight: 400; writing-mode: vertical-rl; transform: rotate(180deg); max-height: 48px; }
+    .field-group.hidden { display: none; }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      align-items: end;
+      background: rgba(9, 11, 12, .52);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+    .sheet {
+      padding: 12px 18px 24px;
+      border-radius: 18px 18px 0 0;
+      background: var(--surface);
+      transform: translateY(100%);
+      transition: transform 360ms cubic-bezier(.22, 1, .36, 1);
+    }
+    .modal-backdrop.open .sheet { transform: none; }
+    .sheet-handle { width: 38px; height: 4px; margin: 0 auto 19px; border-radius: 3px; background: #d3d1cb; }
+    .sheet h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 400; }
+    .sheet p { margin: 6px 0 20px; color: var(--muted); font-size: 10px; }
+    .field-label { display: block; margin: 13px 0 6px; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
+    .sheet input, .sheet select {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--ink);
+      background: var(--paper);
+      outline: none;
+      font: inherit;
+      font-size: 12px;
+    }
+    .sheet-actions { display: grid; grid-template-columns: 1fr 1.6fr; gap: 8px; margin-top: 20px; }
+    .sheet-actions button { height: 44px; border-radius: 7px; cursor: pointer; font-size: 11px; }
+    .cancel { border: 1px solid var(--line); color: var(--ink); background: transparent; }
+    .confirm { border: 0; color: white; background: var(--dark); }
+    .confirm.revalue-confirm {
+      color: white;
+      background: var(--dark);
+      box-shadow: 0 8px 18px rgba(41,54,51,.22);
+    }
+    .confirm.revalue-confirm:active { background: #202b29; }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 88px;
+      z-index: 50;
+      transform: translate(-50%, 12px);
+      padding: 10px 14px;
+      border-radius: 7px;
+      color: white;
+      background: rgba(16,19,20,.94);
+      opacity: 0;
+      pointer-events: none;
+      font-size: 10px;
+      white-space: nowrap;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .presentation-copy { max-width: 520px; }
+    .presentation-copy .kicker { color: #6e5a35; font-size: 11px; text-transform: uppercase; letter-spacing: .18em; }
+    .presentation-copy h1 { margin: 14px 0 18px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(38px, 5vw, 64px); font-weight: 400; line-height: 1.02; letter-spacing: 0; }
+    .presentation-copy > p { margin: 0; max-width: 470px; color: #626667; font-size: 15px; line-height: 1.65; }
+    .data-note { margin-top: 32px; padding-top: 22px; border-top: 1px solid rgba(16,19,20,.16); display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .data-note span { display: block; color: #777b7d; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+    .data-note strong { display: block; margin-top: 6px; font-family: var(--number-font); font-size: 16px; font-weight: 500; }
+    .hint { margin-top: 26px; display: flex; align-items: center; gap: 10px; color: #777b7d; font-size: 11px; }
+    .hint i { width: 26px; height: 1px; background: var(--gold); }
+
+    svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    @media (max-width: 900px) {
+      .prototype { grid-template-columns: 1fr; }
+      .presentation-copy { order: -1; max-width: 620px; margin: 0 auto; text-align: center; }
+      .presentation-copy > p { margin-inline: auto; }
+      .data-note { max-width: 520px; margin-inline: auto; }
+      .hint { justify-content: center; }
+      .device { width: min(430px, 100%); margin: 0 auto; }
+    }
+
+    @media (max-width: 520px) {
+      .showcase { padding: 0; background: var(--paper); }
+      .prototype { display: block; }
+      .presentation-copy { display: none; }
+      .device { width: 100%; height: 100dvh; min-height: 600px; max-height: none; aspect-ratio: auto; padding: 0; border-radius: 0; background: var(--paper); box-shadow: none; }
+      .device::before { top: 9px; }
+      .viewport { border-radius: 0; }
+      .home-header { min-height: 344px; }
+    }
+
+    @media (min-width: 901px) and (max-height: 800px) {
+      .device { max-height: 740px; min-height: 680px; }
+      .home-header { min-height: 330px; padding-top: 54px; }
+      .balance-block { margin-top: 30px; }
+      .quick-actions { margin-top: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="showcase">
+    <div class="prototype">
+      <div class="device" aria-label="Интерактивный прототип приложения Budget 2026">
+        <div class="viewport" id="viewport">
+          <div class="statusbar">
+            <span>9:41</span>
+            <div class="status-icons"><span class="signal">▮▮▮</span><span>⌁</span><span class="battery"></span></div>
+          </div>
+
+          <div class="screen-track">
+            <section class="app-screen home-screen" aria-label="Главная">
+              <header class="home-header">
+                <button class="capital-shortcut" id="openInvestments" aria-label="Открыть капитал" title="Капитал">
+                  <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+                  <span>Капитал</span>
+                </button>
+                <div class="balance-block">
+                  <div class="balance-label">Баланс</div>
+                  <div class="balance" id="balanceValue">487 851,75 ₽</div>
+                </div>
+
+                <div class="quick-actions">
+                  <button class="action-button income" data-operation="income">
+                    <span class="action-icon">
+                      <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                    </span>
+                    <span class="action-copy"><strong>Поступление</strong><span>Добавить доход</span></span>
+                  </button>
+                  <button class="action-button expense" data-operation="expense">
+                    <span class="action-icon">
+                      <svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                    </span>
+                    <span class="action-copy"><strong>Трата</strong><span>Добавить расход</span></span>
+                  </button>
+                </div>
+              </header>
+
+              <div class="home-content">
+                <div class="section-title plan-title"><h2>План расходов на месяц</h2><span id="planPeriod">Июль 2026</span></div>
+                <section class="month-plan" aria-label="План расходов на июль">
+                  <div class="plan-summary">
+                    <div><strong id="planTotal">96 000 ₽</strong></div>
+                    <span class="budget-badge" id="planStatus">План активен</span>
+                  </div>
+                  <div class="progress"><span id="planProgress"></span></div>
+                  <div class="plan-meta"><span>Потрачено <b id="planSpent">0 ₽</b></span><span>Осталось <b id="planRemaining">96 000 ₽</b></span></div>
+                </section>
+
+                <button class="statistics-link" id="openStatistics" aria-label="Открыть статистику">
+                  <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+                  <span><strong>Статистика</strong><small>Доходы и расходы по месяцам и статьям</small></span>
+                  <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+              </div>
+
+              <button class="fab" id="openSettings" aria-label="Открыть настройки" title="Настройки">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.55v-.1A1.7 1.7 0 0 0 8.4 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2V9.55h.3A1.7 1.7 0 0 0 4 8.4a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.46 3.6l.06.06A1.7 1.7 0 0 0 8.4 4a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 9.8 2.3V2h4.05v.3A1.7 1.7 0 0 0 15 4a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.4a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1.1.4h.9v4.05h-.9A1.7 1.7 0 0 0 19.4 15Z"/></svg>
+              </button>
+            </section>
+
+            <section class="app-screen settings-screen" aria-label="Настройки">
+              <div class="settings-hub" id="settingsHub">
+                <div class="page-top">
+                  <button class="back-button" id="closeSettings" aria-label="Вернуться на главную" title="Назад">
+                    <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                  </button>
+                  <div class="page-heading"><span>Приложение</span><h1>Настройки</h1></div>
+                </div>
+                <div class="settings-menu">
+                  <button class="settings-menu-button" data-settings-page="settingsCategoriesPage"><span class="settings-menu-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span class="settings-menu-copy"><strong>Статьи</strong><span>Расходы и поступления</span></span><svg class="settings-menu-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+                  <button class="settings-menu-button" data-settings-page="settingsPlanningPage"><span class="settings-menu-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span><span class="settings-menu-copy"><strong>Планирование</strong><span>Месячный план трат</span></span><svg class="settings-menu-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+                  <button class="settings-menu-button" data-settings-page="settingsBackupPage"><span class="settings-menu-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span><span class="settings-menu-copy"><strong>Резервная копия</strong><span>Экспорт и восстановление данных</span></span><svg class="settings-menu-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+                  <button class="settings-menu-button" data-settings-page="settingsSecurityPage"><span class="settings-menu-icon"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><span class="settings-menu-copy"><strong>Безопасность</strong><span>Защита личных финансов</span></span><svg class="settings-menu-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+                </div>
+                <p class="settings-note">Все данные остаются на этом устройстве. Для личного приложения регистрация и сервер не нужны.</p>
+              </div>
+
+              <div class="settings-subpage" id="settingsCategoriesPage">
+              <div class="page-top">
+                <button class="back-button" data-settings-back aria-label="Вернуться в настройки" title="Назад">
+                  <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <div class="page-heading"><span>Настройки</span><h1>Статьи расходов и поступлений</h1></div>
+              </div>
+
+              <nav class="settings-nav" aria-label="Тип статей">
+                <button class="tab-button active" data-tab="expense-panel">Расходы</button>
+                <button class="tab-button" data-tab="income-panel">Поступления</button>
+              </nav>
+
+              <div class="tab-panel active" id="expense-panel">
+                <div class="category-list" id="expenseList">
+                  <div class="category-row"><span class="category-symbol">П</span><span class="category-copy"><strong>Продукты и химия</strong></span><input class="amount-input plan-input" value="40 000 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">Ж</span><span class="category-copy"><strong>ЖКХ и связь</strong></span><input class="amount-input plan-input" value="10 000 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">А</span><span class="category-copy"><strong>Автомобиль</strong></span><input class="amount-input plan-input" value="20 000 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">З</span><span class="category-copy"><strong>Здоровье и спорт</strong></span><input class="amount-input plan-input" value="10 000 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">О</span><span class="category-copy"><strong>Отдых</strong></span><input class="amount-input plan-input" value="10 000 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">К</span><span class="category-copy"><strong>Кошка</strong></span><input class="amount-input plan-input" value="6 000 ₽" readonly tabindex="-1" /></div>
+                  <button class="add-list-row" data-add-category="expense" aria-label="Добавить статью расхода">
+                    <span class="add-category"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>Добавить статью расхода</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="income-panel">
+                <div class="category-list" id="incomeList">
+                  <div class="income-row"><span class="category-symbol">Р</span><span class="category-copy"><strong>Работа № 1</strong></span></div>
+                  <div class="income-row"><span class="category-symbol">А</span><span class="category-copy"><strong>Аванс</strong></span></div>
+                  <div class="income-row"><span class="category-symbol">П</span><span class="category-copy"><strong>Частные подработки</strong></span></div>
+                  <div class="income-row"><span class="category-symbol">К</span><span class="category-copy"><strong>Кэшбэк</strong></span></div>
+                  <div class="income-row"><span class="category-symbol">И</span><span class="category-copy"><strong>Инвестиционный доход</strong></span></div>
+                  <button class="add-list-row" data-add-category="income" aria-label="Добавить статью поступления">
+                    <span class="add-category"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>Добавить статью поступления</span>
+                  </button>
+                </div>
+              </div>
+
+              </div>
+
+              <div class="settings-subpage" id="settingsPlanningPage">
+                <div class="page-top"><button class="back-button" data-settings-back aria-label="Вернуться в настройки" title="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><div class="page-heading"><span>Настройки</span><h1>Планирование</h1></div></div>
+                <div class="plan-toggle-row">
+                <div><strong>Вести план трат</strong><span>Показывать месячный план и суммы по статьям</span></div>
+                <label class="switch" aria-label="Вести план трат">
+                  <input type="checkbox" id="planEnabledToggle" checked />
+                  <span class="switch-track"></span>
+                </label>
+              </div>
+                <p class="settings-note">План переносится на следующий месяц автоматически. Фактические расходы нового месяца начинаются с нуля.</p>
+              </div>
+
+              <div class="settings-subpage" id="settingsBackupPage">
+                <div class="page-top"><button class="back-button" data-settings-back aria-label="Вернуться в настройки" title="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><div class="page-heading"><span>Настройки</span><h1>Резервная копия</h1></div></div>
+                <div class="settings-section"><div class="settings-status"><strong>На этом iPhone</strong><span>Данные хранятся локально. Файл копии можно сохранить в iCloud Drive или в «Файлы».</span></div><button class="settings-action" id="exportBackup">Экспортировать копию</button><button class="settings-action secondary" id="importBackup">Восстановить из файла</button><input type="file" id="importBackupFile" accept="application/json,.json" hidden /></div>
+              </div>
+
+              <div class="settings-subpage" id="settingsSecurityPage">
+                <div class="page-top"><button class="back-button" data-settings-back aria-label="Вернуться в настройки" title="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><div class="page-heading"><span>Настройки</span><h1>Безопасность</h1></div></div>
+                <div class="plan-toggle-row"><div><strong>Защищать приложение</strong><span>В версии для iPhone вход будет подтверждаться через Face ID</span></div><label class="switch" aria-label="Защищать приложение"><input type="checkbox" id="securityToggle" /><span class="switch-track"></span></label></div>
+                <p class="settings-note">В браузерном прототипе Face ID недоступен. Переключатель сохраняет выбранную настройку для будущей нативной версии.</p>
+              </div>
+            </section>
+
+            <section class="app-screen investments-screen" id="investmentsScreen" aria-label="Капитал">
+              <div class="broker-overview">
+                <div class="capital-sticky">
+                  <div class="page-top">
+                    <button class="back-button" id="closeInvestments" aria-label="Вернуться в настройки" title="Назад">
+                      <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <div class="page-heading"><h1>Капитал</h1></div>
+                  </div>
+
+                  <section class="investment-summary" aria-label="Общая сумма капитала">
+                    <span>Капитал</span>
+                    <strong id="investmentTotal">7 779 007 ₽</strong>
+                    <small>Активы за вычетом пассивов</small>
+                  </section>
+
+                  <nav class="settings-nav capital-nav" aria-label="Разделы капитала">
+                    <button class="tab-button capital-tab active" data-capital-tab="active-assets-panel">Активы</button>
+                    <button class="tab-button capital-tab" data-capital-tab="liabilities-panel">Пассивы</button>
+                  </nav>
+                </div>
+
+                <div class="capital-scroll" id="capitalScroll">
+                  <div class="capital-panel active" id="active-assets-panel">
+                  <div class="broker-heading">
+                    <div><h2>Наличка и карты</h2></div>
+                    <button class="add-category" id="addFund" aria-label="Добавить карту или наличные" title="Добавить карту или наличные">
+                      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  </div>
+                  <div class="fund-list" id="fundList">
+                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">С</span><span class="asset-copy"><strong>Карта Сбер</strong><span>Банковская карта</span></span><input class="fund-input" value="41 313,78 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">Т</span><span class="asset-copy"><strong>Карта Тинькофф</strong><span>Основная карта</span></span><input class="fund-input" value="379 029,19 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">З</span><span class="asset-copy"><strong>Карта зарплаты</strong><span>Зарплатная карта</span></span><input class="fund-input" value="68,56 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Наличные"><span class="asset-icon">Н</span><span class="asset-copy"><strong>Наличные дома</strong><span>Место хранения: дом</span></span><input class="fund-input" value="67 535,00 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Корректировка"><span class="asset-icon">±</span><span class="asset-copy"><strong>Корректировка</strong><span>Остаток к уточнению</span></span><input class="fund-input" value="−94,78 ₽" readonly tabindex="-1" /></div>
+                  </div>
+
+                  <div class="broker-heading">
+                    <div><h2>Сбережения</h2><p>Накопительные и сберегательные счета</p></div>
+                    <button class="add-category" id="addSavings" aria-label="Добавить сберегательный счёт" title="Добавить сберегательный счёт">
+                      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  </div>
+                  <div class="broker-list" id="savingsList">
+                    <button class="broker-row savings-row" data-name="Сберегательный счёт" data-symbol="С" data-value="0 ₽" data-asset-type="savings">
+                      <span class="broker-logo">С</span><span class="broker-name"><strong>Сберегательный счёт</strong></span><span class="broker-value"><strong>0 ₽</strong></span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                  </div>
+
+                  <div class="broker-heading">
+                    <div><h2>Мне должны</h2><p>Деньги, переданные другим людям</p></div>
+                    <button class="add-category" id="addLoan" aria-label="Добавить выданный долг" title="Добавить долг">
+                      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  </div>
+                  <div class="asset-list" id="loanList">
+                    <div class="empty-note" id="loanEmpty">Пока никто не должен</div>
+                  </div>
+
+                  <div class="broker-heading">
+                    <div><h2>Инвестиции</h2><p>Брокеры и портфели</p></div>
+                    <button class="add-category" id="addBroker" aria-label="Добавить брокера" title="Добавить брокера">
+                      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  </div>
+
+                  <div class="broker-list" id="brokerList">
+                    <button class="broker-row" data-name="Тинькофф" data-symbol="Т" data-value="724 061 ₽">
+                      <span class="broker-logo">Т</span>
+                      <span class="broker-name"><strong>Тинькофф</strong></span>
+                      <span class="broker-value"><strong>724 061 ₽</strong></span>
+                      <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                    <button class="broker-row" data-name="Финам" data-symbol="Ф" data-value="304 946 ₽">
+                      <span class="broker-logo">Ф</span>
+                      <span class="broker-name"><strong>Финам</strong></span>
+                      <span class="broker-value"><strong>304 946 ₽</strong></span>
+                      <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                    <button class="broker-row" data-name="Сбер" data-symbol="С" data-value="0 ₽">
+                      <span class="broker-logo">С</span>
+                      <span class="broker-name"><strong>Сбер</strong></span>
+                      <span class="broker-value"><strong>0 ₽</strong></span>
+                      <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                  </div>
+                  <div class="broker-heading">
+                    <div><h2>Имущество</h2><p>Квартира, транспорт и ценности</p></div>
+                    <button class="add-category" id="addAsset" aria-label="Добавить актив" title="Добавить актив">
+                      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  </div>
+                  <div class="asset-list" id="assetList">
+                    <div class="asset-row" data-value="5000000"><span class="asset-icon">К</span><span class="asset-copy"><strong>Квартира</strong><span>Недвижимость</span></span><strong class="asset-value">5 000 000 ₽</strong></div>
+                    <div class="asset-row" data-value="1250000"><span class="asset-icon">А</span><span class="asset-copy"><strong>Автомобиль</strong><span>Личный транспорт</span></span><strong class="asset-value">1 250 000 ₽</strong></div>
+                    <div class="asset-row" data-value="180000"><span class="asset-icon">К</span><span class="asset-copy"><strong>Компьютер</strong><span>Техника</span></span><strong class="asset-value">180 000 ₽</strong></div>
+                    <div class="asset-row" data-value="320000"><span class="asset-icon">Д</span><span class="asset-copy"><strong>Драгоценности</strong><span>Личные ценности</span></span><strong class="asset-value">320 000 ₽</strong></div>
+                  </div>
+                </div>
+
+                  <div class="capital-panel" id="liabilities-panel">
+                  <div class="broker-heading">
+                    <div><h2>Пассивы</h2><p>Кредиты, займы и обязательства</p></div>
+                    <button class="add-category" id="addLiability" aria-label="Добавить пассив" title="Добавить пассив">
+                      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  </div>
+                  <div class="asset-list" id="liabilityList">
+                    <div class="asset-row liability-row" data-value="0" data-interest-paid="0"><span class="asset-icon">И</span><span class="asset-copy"><strong>Ипотека</strong><span>Выплачено процентов: 0 ₽</span></span><strong class="asset-value">0 ₽</strong></div>
+                    <div class="asset-row liability-row" data-value="0" data-interest-paid="0"><span class="asset-icon">К</span><span class="asset-copy"><strong>Кредит Сбер</strong><span>Выплачено процентов: 0 ₽</span></span><strong class="asset-value">0 ₽</strong></div>
+                  </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="broker-detail">
+                <div class="page-top">
+                  <button class="back-button" id="closeBroker" aria-label="Вернуться к списку брокеров" title="Назад">
+                    <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                  </button>
+                  <div class="page-heading"><span>Брокер</span><h1 id="brokerDetailTitle">Тинькофф</h1></div>
+                  <span class="broker-logo" id="brokerDetailLogo">Т</span>
+                </div>
+
+                <div class="broker-balance-card">
+                  <span>Инвестиции</span>
+                  <strong id="brokerDetailValue">0 ₽</strong>
+                </div>
+                <div class="broker-actions">
+                  <button class="broker-action" data-broker-action="deposit"><strong>+</strong><span>Пополнить</span></button>
+                  <button class="broker-action" data-broker-action="withdraw"><strong>−</strong><span>Вывести</span></button>
+                  <button class="broker-action" data-broker-action="income"><strong>+</strong><span>Доход</span></button>
+                  <button class="broker-action" data-broker-action="charge"><strong>−</strong><span>Комиссия / налог</span></button>
+                </div>
+                <button class="broker-revalue" data-broker-action="revalue"><span>Обновить стоимость</span><small>Переоценка портфеля</small></button>
+                <div class="broker-history">
+                  <h2>История операций</h2>
+                  <div id="brokerHistoryList"><div class="empty-note">Операций пока нет</div></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="app-screen statistics-screen" id="statisticsScreen" aria-label="Статистика">
+              <div class="statistics-fixed">
+                <div class="statistics-toolbar">
+                  <div class="page-top">
+                    <button class="back-button" id="closeStatistics" aria-label="Вернуться на главную" title="Назад">
+                      <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <div class="page-heading"><h1>Статистика</h1></div>
+                  </div>
+                  <select class="statistics-year" id="statisticsPageYear" aria-label="Выбрать год"></select>
+                </div>
+
+                <section class="statistics-summary" aria-label="Итоги года">
+                  <span>Финансовый результат за год</span>
+                  <strong class="statistics-net" id="statisticsNetTotal">0 ₽</strong>
+                  <div class="statistics-month-result" id="statisticsMonthResult">
+                    <span id="statisticsMonthLabel">Результат за июль</span>
+                    <strong id="statisticsMonthNet">0 ₽</strong>
+                  </div>
+                  <div class="statistics-totals">
+                    <div><span>Доход</span><strong id="statisticsIncomeTotal">0 ₽</strong></div>
+                    <div><span>Расход</span><strong id="statisticsExpenseTotal">0 ₽</strong></div>
+                  </div>
+                </section>
+
+                <nav class="settings-nav statistics-tabs" aria-label="Вид статистики">
+                  <button class="tab-button active" data-statistics-view="monthly-statistics-panel">По месяцам</button>
+                  <button class="tab-button" data-statistics-view="category-statistics-panel">По статьям</button>
+                </nav>
+              </div>
+
+              <div class="statistics-scroll" id="statisticsScroll">
+                <div class="statistics-panel active" id="monthly-statistics-panel">
+                  <div id="monthlyStatisticsList"></div>
+                </div>
+                <div class="statistics-panel" id="category-statistics-panel">
+                  <div id="categoryStatisticsList"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="modal-backdrop" id="operationModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="sheet">
+              <div class="sheet-handle"></div>
+              <h2 id="modalTitle">Новая операция</h2>
+              <p id="modalSubtitle">Добавьте сумму и выберите статью</p>
+              <label class="field-label" for="operationAmount">Сумма</label>
+              <input id="operationAmount" inputmode="decimal" placeholder="0 ₽" />
+              <label class="field-label" for="operationCategory">Статья</label>
+              <select id="operationCategory"></select>
+              <label class="field-label" for="operationAccount" id="operationAccountLabel">Списать с</label>
+              <select id="operationAccount"></select>
+              <div class="sheet-actions">
+                <button class="cancel" id="cancelOperation">Отмена</button>
+                <button class="confirm" id="confirmOperation">Добавить</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-backdrop" id="recordModal" role="dialog" aria-modal="true" aria-labelledby="recordTitle">
+            <div class="sheet">
+              <div class="sheet-handle"></div>
+              <h2 id="recordTitle">Новая запись</h2>
+              <p id="recordSubtitle">Заполните данные</p>
+              <div class="field-group" id="recordKindGroup">
+                <label class="field-label" for="recordKind">Тип</label>
+                <select id="recordKind"><option>Карта</option><option>Наличные</option></select>
+              </div>
+              <label class="field-label" for="recordName">Название</label>
+              <input id="recordName" placeholder="Введите название" />
+              <div class="field-group" id="recordValueGroup">
+                <label class="field-label" for="recordValue" id="recordValueLabel">Сумма</label>
+                <input id="recordValue" inputmode="decimal" placeholder="0 ₽" />
+              </div>
+              <div class="sheet-actions">
+                <button class="cancel" id="cancelRecord">Отмена</button>
+                <button class="confirm" id="saveRecord">Сохранить</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-backdrop" id="loanModal" role="dialog" aria-modal="true" aria-labelledby="loanTitle">
+            <div class="sheet">
+              <div class="sheet-handle"></div>
+              <h2 id="loanTitle">Дать в долг</h2>
+              <p>Сумма уйдёт с выбранного счёта и останется в составе капитала</p>
+              <label class="field-label" for="loanPerson">Кому</label>
+              <input id="loanPerson" placeholder="Например, Андрей" />
+              <label class="field-label" for="loanAmount">Сумма</label>
+              <input id="loanAmount" inputmode="decimal" placeholder="0 ₽" />
+              <label class="field-label" for="loanAccount">Откуда выдать</label>
+              <select id="loanAccount"></select>
+              <div class="sheet-actions">
+                <button class="cancel" id="cancelLoan">Отмена</button>
+                <button class="confirm" id="saveLoan">Сохранить</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-backdrop" id="creditPaymentModal" role="dialog" aria-modal="true" aria-labelledby="creditPaymentTitle">
+            <div class="sheet">
+              <div class="sheet-handle"></div>
+              <h2 id="creditPaymentTitle">Платёж по кредиту</h2>
+              <p>Остаток тела кредита: <strong id="creditPaymentBalance">0 ₽</strong></p>
+              <label class="field-label" for="creditPrincipal">В погашение тела</label>
+              <input id="creditPrincipal" inputmode="decimal" placeholder="0 ₽" />
+              <label class="field-label" for="creditInterest">Проценты</label>
+              <input id="creditInterest" inputmode="decimal" placeholder="0 ₽" />
+              <label class="field-label" for="creditPaymentAccount">Списать с</label>
+              <select id="creditPaymentAccount"></select>
+              <div class="sheet-actions">
+                <button class="cancel" id="cancelCreditPayment">Отмена</button>
+                <button class="confirm" id="saveCreditPayment">Оплатить</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-backdrop" id="brokerOperationModal" role="dialog" aria-modal="true" aria-labelledby="brokerOperationTitle">
+            <div class="sheet">
+              <div class="sheet-handle"></div>
+              <h2 id="brokerOperationTitle">Операция брокера</h2>
+              <p id="brokerOperationSubtitle">Укажите сумму операции</p>
+              <div class="field-group" id="brokerOperationKindGroup">
+                <label class="field-label" for="brokerOperationKind">Тип операции</label>
+                <select id="brokerOperationKind"></select>
+              </div>
+              <label class="field-label" for="brokerOperationAmount">Сумма</label>
+              <input id="brokerOperationAmount" inputmode="decimal" placeholder="0 ₽" />
+              <div class="field-group" id="brokerOperationAccountGroup">
+                <label class="field-label" for="brokerOperationAccount" id="brokerOperationAccountLabel">Счёт</label>
+                <select id="brokerOperationAccount"></select>
+              </div>
+              <div class="sheet-actions">
+                <button class="cancel" id="cancelBrokerOperation">Отмена</button>
+                <button class="confirm" id="saveBrokerOperation">Добавить</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-backdrop" id="monthHistoryModal" role="dialog" aria-modal="true" aria-labelledby="monthHistoryTitle">
+            <div class="sheet">
+              <div class="sheet-handle"></div>
+              <h2 id="monthHistoryTitle">История за месяц</h2>
+              <p id="monthHistorySummary">Движения по дням</p>
+              <div id="monthHistoryList"></div>
+            </div>
+          </div>
+          <div class="modal-backdrop" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+            <div class="sheet stats-sheet" id="statsSheet">
+              <div class="sheet-handle"></div>
+              <div class="stats-head">
+                <h2 id="statsTitle">Статистика доходов</h2>
+                <div class="stats-head-controls">
+                  <select class="year-select" id="statsYear" aria-label="Выбрать год">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                  </select>
+                </div>
+              </div>
+              <div class="stats-period-toggle">
+                <button class="active" data-stats-period="annual">За год</button>
+                <button data-stats-period="monthly">По месяцам</button>
+              </div>
+              <div class="stats-total-row">
+                <div class="stats-total" id="statsTotal">3 057 547 ₽</div>
+              </div>
+              <div class="stats-caption" id="statsCaption">Итого за 2026 год</div>
+              <div class="stats-content">
+                <div class="stats-annual" id="statsAnnual">
+                  <div class="stats-annual-item"><span>Среднее в месяц</span><strong class="stats-value" id="statsAverage">509 591 ₽</strong></div>
+                  <div class="stats-annual-item"><span id="statsPeakLabel">Лучший месяц</span><strong class="stats-value" id="statsBest">Июнь · 1 932 740 ₽</strong></div>
+                </div>
+                <div class="monthly-chart" id="monthlyChart"></div>
+              </div>
+            </div>
+          </div>
+          <div class="toast" id="toast">План сохранён</div>
+        </div>
+      </div>
+
+      <aside class="presentation-copy">
+        <div class="kicker">Персональные финансы · iPhone / iPad</div>
+        <h1>Спокойный контроль над деньгами.</h1>
+        <p>Премиальный интерфейс сдержанно показывает главное: баланс, быстрые операции, месячный план и структуру капитала. Данные и категории собраны из вашей книги Budget2026.xlsx.</p>
+        <div class="data-note">
+          <div><span>Баланс</span><strong>487 851,75 ₽</strong></div>
+          <div><span>Доходы 2026</span><strong>3,06 млн ₽</strong></div>
+          <div><span>Расходы 2026</span><strong>2,62 млн ₽</strong></div>
+        </div>
+        <div class="hint"><i></i><span>Нажмите кнопку настроек в правом нижнем углу</span></div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const viewport = document.getElementById('viewport');
+    const modal = document.getElementById('operationModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    const categorySelect = document.getElementById('operationCategory');
+    const operationAccount = document.getElementById('operationAccount');
+    const amountField = document.getElementById('operationAmount');
+    const toast = document.getElementById('toast');
+    const recordModal = document.getElementById('recordModal');
+    const loanModal = document.getElementById('loanModal');
+    const creditPaymentModal = document.getElementById('creditPaymentModal');
+    const brokerOperationModal = document.getElementById('brokerOperationModal');
+    const monthHistoryModal = document.getElementById('monthHistoryModal');
+    const statsModal = document.getElementById('statsModal');
+    const statsSheet = document.getElementById('statsSheet');
+    const investmentsScreen = document.getElementById('investmentsScreen');
+    const capitalScroll = document.getElementById('capitalScroll');
+    const statisticsScreen = document.getElementById('statisticsScreen');
+    const statisticsScroll = document.getElementById('statisticsScroll');
+    const brokerList = document.getElementById('brokerList');
+    let selectedBroker = null;
+    let brokerOperationType = 'deposit';
+    const brokerHistory = new Map();
+    let transactionLedger = [];
+    let selectedLoan = null;
+    let selectedLiability = null;
+    let currentOperation = 'expense';
+    let recordType = 'asset';
+    let recordTarget = null;
+    let accountSequence = 0;
+
+    const categories = {
+      income: ['Работа № 1', 'Аванс', 'Частные подработки', 'Кэшбэк', 'Инвестиционный доход'],
+      expense: ['Продукты и химия', 'ЖКХ и связь', 'Автомобиль', 'Здоровье и спорт', 'Отдых', 'Кошка']
+    };
+
+    const statistics = {
+      income: {
+        title: 'Статистика доходов', total: 3057547,
+        months: [323615, 291016, 280826, 337213, 396910, 1932740, 0, 0, 0, 0, 0, 0]
+      },
+      expense: {
+        title: 'Статистика расходов', total: 2623723,
+        months: [229214, 207950, 205780, 226848, 309042, 1444889, 0, 0, 0, 0, 0, 0]
+      }
+    };
+    const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+    const yearlyFlow = {
+      2026: {
+        income: [...statistics.income.months],
+        expense: [...statistics.expense.months]
+      }
+    };
+    let currentStatistics = 'income';
+    let selectedStatsYear = '2026';
+    const expenseSpent = new Map();
+    const expenseHistory = new Map();
+    let activeMonthKey = '';
+
+    function getYearFlow(year, create = false) {
+      const key = String(year);
+      if (!yearlyFlow[key] && create) yearlyFlow[key] = { income: Array(12).fill(0), expense: Array(12).fill(0) };
+      return yearlyFlow[key] || { income: Array(12).fill(0), expense: Array(12).fill(0) };
+    }
+
+    function populateStatisticsYears() {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let year = currentYear + 2; year >= 2024; year -= 1) years.push(year);
+      const options = years.map(year => `<option value="${year}">${year}</option>`).join('');
+      document.getElementById('statisticsPageYear').innerHTML = options;
+      document.getElementById('statisticsPageYear').value = String(currentYear);
+      document.getElementById('statsYear').innerHTML = options;
+      document.getElementById('statsYear').value = String(currentYear);
+      selectedStatsYear = String(currentYear);
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    function addLedgerEntry(type, amount, label, account = '') {
+      transactionLedger.unshift({ id: `${Date.now()}-${Math.random()}`, type, amount, label, account, date: new Date().toISOString() });
+      writeStorage('budget-transaction-ledger', transactionLedger);
+    }
+
+    function openMonthHistory(year, monthIndex) {
+      const entries = transactionLedger.filter(entry => {
+        const date = new Date(entry.date);
+        return date.getFullYear() === Number(year) && date.getMonth() === monthIndex;
+      }).sort((a, b) => new Date(b.date) - new Date(a.date));
+      const historyPrefix = `${year}-${monthIndex}-`;
+      const flow = getYearFlow(year);
+      const ledgerIncome = entries.filter(entry => entry.type === 'income').reduce((sum, entry) => sum + entry.amount, 0);
+      const ledgerExpense = entries.filter(entry => entry.type === 'expense').reduce((sum, entry) => sum + entry.amount, 0);
+      const categorySummary = [...expenseHistory.entries()].filter(([key, value]) => key.startsWith(historyPrefix) && value > 0).map(([key, value]) => {
+        const label = key.slice(historyPrefix.length);
+        const detailed = entries.filter(entry => entry.type === 'expense' && entry.label === label).reduce((sum, entry) => sum + entry.amount, 0);
+        return { label, amount: Math.max(0, value - detailed), type: 'expense' };
+      }).filter(entry => entry.amount > 0);
+      const classifiedExpense = categorySummary.reduce((sum, entry) => sum + entry.amount, 0);
+      const summaryEntries = [
+        ...categorySummary,
+        { label: 'Ранее учтённые поступления', amount: Math.max(0, flow.income[monthIndex] - ledgerIncome), type: 'income' },
+        { label: 'Ранее учтённые расходы', amount: Math.max(0, flow.expense[monthIndex] - ledgerExpense - classifiedExpense), type: 'expense' }
+      ].filter(entry => entry.amount > 0);
+      const monthTitle = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' }).format(new Date(Number(year), monthIndex, 1));
+      document.getElementById('monthHistoryTitle').textContent = monthTitle.replace(/^./, letter => letter.toUpperCase());
+      document.getElementById('monthHistorySummary').textContent = entries.length ? `${entries.length} подробных операций · сохранённые итоги ниже` : summaryEntries.length ? 'Сохранённые итоги за месяц' : 'Операций за этот период нет';
+      const list = document.getElementById('monthHistoryList');
+      const detailedRows = entries.map(entry => {
+        const date = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date(entry.date));
+        return `<div class="history-row ${entry.type}"><div><strong>${escapeHtml(entry.label)}</strong><small>${date}${entry.account ? ` · ${escapeHtml(entry.account)}` : ''}</small></div><span>${entry.type === 'income' ? '+' : '−'}${formatMoney(entry.amount)}</span></div>`;
+      }).join('');
+      const summaryRows = summaryEntries.map(entry => `<div class="history-row ${entry.type}"><div><strong>${escapeHtml(entry.label)}</strong><small>Сводно, без детализации по дням</small></div><span>${entry.type === 'income' ? '+' : '−'}${formatMoney(entry.amount)}</span></div>`).join('');
+      list.innerHTML = detailedRows + summaryRows || '<div class="empty-note">Операций за этот месяц пока нет.</div>';
+      monthHistoryModal.classList.add('open');
+    }
+
+    function openOperation(type) {
+      currentOperation = type;
+      const isIncome = type === 'income';
+      modalTitle.textContent = isIncome ? 'Новое поступление' : 'Новая трата';
+      modalSubtitle.textContent = isIncome ? 'Добавьте доход в текущий баланс' : 'Зафиксируйте расход по статье';
+      categorySelect.innerHTML = categories[type].map(item => `<option>${item}</option>`).join('');
+      document.getElementById('operationAccountLabel').textContent = isIncome ? 'Зачислить на' : 'Списать с';
+      refreshAccountOptions();
+      amountField.value = '';
+      modal.classList.add('open');
+      window.setTimeout(() => amountField.focus(), 280);
+    }
+
+    function closeOperation() { modal.classList.remove('open'); }
+
+    function formatMoney(value) {
+      return `${new Intl.NumberFormat('ru-RU').format(Math.round(value))} ₽`;
+    }
+
+    function formatMoneyCents(value) {
+      return `${new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} ₽`;
+    }
+
+    function parseLocalizedMoney(value) {
+      const normalized = String(value)
+        .replace(/−/g, '-')
+        .replace(/\s|₽/g, '')
+        .replace(',', '.')
+        .replace(/[^0-9.-]/g, '');
+      return Number(normalized) || 0;
+    }
+
+    function getPeriodState() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const monthIndex = date.getMonth();
+      return {
+        year,
+        monthIndex,
+        key: `${year}-${String(monthIndex + 1).padStart(2, '0')}`,
+        title: new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' }).format(date).replace(/^./, letter => letter.toUpperCase()),
+        shortTitle: new Intl.DateTimeFormat('ru-RU', { month: 'long' }).format(date)
+      };
+    }
+
+    function readStorage(key, fallback) {
+      try {
+        const value = window.localStorage.getItem(key);
+        return value ? JSON.parse(value) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function writeStorage(key, value) {
+      try { window.localStorage.setItem(key, JSON.stringify(value)); } catch {}
+    }
+
+    function applyPlanEnabled(enabled, persist = true) {
+      viewport.classList.toggle('plan-disabled', !enabled);
+      document.getElementById('planEnabledToggle').checked = enabled;
+      if (persist) writeStorage('budget-plan-enabled', enabled);
+    }
+
+    function persistPlanState() {
+      if (!activeMonthKey) return;
+      const plans = {};
+      document.querySelectorAll('#expenseList .category-row').forEach(row => {
+        plans[row.querySelector('.category-copy strong').textContent.trim()] = parseMoney(row.querySelector('.amount-input').value);
+      });
+      writeStorage('budget-plan-values', plans);
+      writeStorage('budget-plan-spent', Object.fromEntries(expenseSpent));
+      writeStorage('budget-expense-history', Object.fromEntries(expenseHistory));
+      writeStorage('budget-yearly-flow', yearlyFlow);
+      writeStorage('budget-plan-period', activeMonthKey);
+      const period = getPeriodState();
+      const flow = getYearFlow(period.year, true);
+      writeStorage('budget-month-flow', {
+        period: activeMonthKey,
+        income: flow.income[period.monthIndex],
+        expense: flow.expense[period.monthIndex]
+      });
+    }
+
+    function loadMonthlyPlanState() {
+      const period = getPeriodState();
+      activeMonthKey = period.key;
+      document.getElementById('planPeriod').textContent = period.title;
+      const plans = readStorage('budget-plan-values', {});
+      document.querySelectorAll('#expenseList .category-row').forEach(row => {
+        const name = row.querySelector('.category-copy strong').textContent.trim();
+        if (plans[name] !== undefined) row.querySelector('.amount-input').value = formatMoney(plans[name]);
+      });
+      expenseSpent.clear();
+      expenseHistory.clear();
+      const savedYearlyFlow = readStorage('budget-yearly-flow', {});
+      Object.entries(savedYearlyFlow).forEach(([year, flow]) => {
+        yearlyFlow[year] = {
+          income: Array.from({ length: 12 }, (_, index) => Number(flow.income?.[index]) || 0),
+          expense: Array.from({ length: 12 }, (_, index) => Number(flow.expense?.[index]) || 0)
+        };
+      });
+      Object.entries(readStorage('budget-expense-history', {})).forEach(([key, value]) => expenseHistory.set(key, Number(value) || 0));
+      if (readStorage('budget-plan-period', '') === period.key) {
+        Object.entries(readStorage('budget-plan-spent', {})).forEach(([name, value]) => expenseSpent.set(name, Number(value) || 0));
+      }
+      const savedFlow = readStorage('budget-month-flow', {});
+      if (savedFlow.period === period.key) {
+        const flow = getYearFlow(period.year, true);
+        flow.income[period.monthIndex] = Number(savedFlow.income) || 0;
+        flow.expense[period.monthIndex] = Number(savedFlow.expense) || 0;
+      }
+      updatePlanSummary();
+      updateMonthlyNet();
+    }
+
+    function ensureCurrentPeriod() {
+      const period = getPeriodState();
+      document.getElementById('planPeriod').textContent = period.title;
+      if (activeMonthKey && activeMonthKey !== period.key) {
+        activeMonthKey = period.key;
+        expenseSpent.clear();
+        const flow = getYearFlow(period.year, true);
+        flow.income[period.monthIndex] = 0;
+        flow.expense[period.monthIndex] = 0;
+        updatePlanSummary();
+        updateMonthlyNet();
+      }
+    }
+
+    function parseMoney(value) {
+      return Number(String(value).replace(/[^0-9]/g, '')) || 0;
+    }
+
+    function updateCapitalTotal() {
+      const brokersTotal = [...document.querySelectorAll('.broker-row')].reduce((sum, row) => sum + parseMoney(row.dataset.value), 0);
+      const assetsTotal = [...document.querySelectorAll('#assetList .asset-row')].reduce((sum, row) => sum + Number(row.dataset.value || 0), 0);
+      const liabilitiesTotal = [...document.querySelectorAll('#liabilityList .liability-row')].reduce((sum, row) => sum + Number(row.dataset.value || 0), 0);
+      const loansTotal = [...document.querySelectorAll('#loanList .loan-row')].reduce((sum, row) => sum + Number(row.dataset.value || 0), 0);
+      const fundsTotal = [...document.querySelectorAll('.fund-input')].reduce((sum, input) => sum + parseLocalizedMoney(input.value), 0);
+      document.getElementById('investmentTotal').textContent = formatMoney(brokersTotal + assetsTotal + fundsTotal + loansTotal - liabilitiesTotal);
+    }
+
+    function persistBrokerValues() {
+      const values = {};
+      document.querySelectorAll('.broker-row').forEach(row => { values[row.dataset.name] = row.dataset.value; });
+      writeStorage('budget-broker-values', values);
+      writeStorage('budget-savings-list', [...document.querySelectorAll('.savings-row')].map(row => ({ name: row.dataset.name, symbol: row.dataset.symbol, value: row.dataset.value })));
+    }
+
+    function updateBalance() {
+      const total = [...document.querySelectorAll('.fund-input')].reduce((sum, input) => sum + parseLocalizedMoney(input.value), 0);
+      document.getElementById('balanceValue').textContent = formatMoneyCents(total);
+      updateCapitalTotal();
+    }
+
+    function bindFundInput(input) {
+      if (input.dataset.bound === 'true') return;
+      input.dataset.bound = 'true';
+      input.readOnly = true;
+      input.tabIndex = -1;
+    }
+
+    function refreshAccountOptions() {
+      const accounts = [...document.querySelectorAll('.fund-row')].filter(row => row.dataset.kind !== 'Корректировка');
+      const options = accounts.map(row => {
+        if (!row.dataset.accountId) row.dataset.accountId = `account-${++accountSequence}`;
+        const name = row.querySelector('.asset-copy strong').textContent.trim();
+        const balance = row.querySelector('.fund-input').value;
+        return `<option value="${row.dataset.accountId}">${name} · ${balance}</option>`;
+      }).join('');
+      operationAccount.innerHTML = options;
+      document.getElementById('loanAccount').innerHTML = options;
+    }
+
+    function updateMonthlyNet() {
+      if (viewport.classList.contains('statistics-open')) renderStatisticsPage();
+    }
+
+    function updatePlanSummary() {
+      const rows = [...document.querySelectorAll('#expenseList .category-row')];
+      const plan = rows.reduce((sum, row) => sum + parseMoney(row.querySelector('.amount-input').value), 0);
+      const visibleCategories = new Set(rows.map(row => row.querySelector('.category-copy strong').textContent.trim()));
+      const spent = [...expenseSpent.entries()].reduce((sum, [name, value]) => visibleCategories.has(name) ? sum + value : sum, 0);
+      const remaining = plan - spent;
+      const progress = plan > 0 ? Math.min(100, spent / plan * 100) : 0;
+      document.getElementById('planTotal').textContent = formatMoney(plan);
+      document.getElementById('planSpent').textContent = formatMoney(spent);
+      document.getElementById('planRemaining').textContent = formatMoney(remaining);
+      document.getElementById('planRemaining').style.color = remaining < 0 ? 'var(--coral)' : 'var(--ink)';
+      document.getElementById('planProgress').style.width = `${progress}%`;
+      document.getElementById('planProgress').style.background = remaining < 0 ? 'var(--coral)' : 'var(--emerald)';
+      document.getElementById('planStatus').textContent = remaining < 0 ? `Перерасход ${formatMoney(Math.abs(remaining))}` : `${Math.round(progress)}% потрачено`;
+      persistPlanState();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character]);
+    }
+
+    function openRecordEditor(type, target = null) {
+      recordType = type;
+      recordTarget = target;
+      const settings = {
+        fund: ['Карта или наличные', 'Добавьте отдельное место хранения', 'Текущий остаток'],
+        asset: ['Актив', 'Добавьте имущество и его стоимость', 'Стоимость'],
+        liability: ['Пассив', 'Добавьте кредит, займ или обязательство', 'Остаток задолженности'],
+        broker: ['Брокер', 'Добавьте инвестиционный счёт', 'Сумма портфеля'],
+        savings: ['Сберегательный счёт', 'Добавьте накопительный или сберегательный счёт', 'Текущая сумма'],
+        expenseCategory: ['Статья расхода', 'Добавьте категорию и месячный план', 'План на месяц'],
+        incomeCategory: ['Статья прихода', 'Добавьте новый источник дохода', 'Сумма']
+      }[type];
+      document.getElementById('recordTitle').textContent = target ? `Настроить: ${settings[0]}` : `Добавить: ${settings[0]}`;
+      document.getElementById('recordSubtitle').textContent = settings[1];
+      document.getElementById('recordValueLabel').textContent = settings[2];
+      document.getElementById('recordKindGroup').classList.toggle('hidden', type !== 'fund');
+      document.getElementById('recordValueGroup').classList.toggle('hidden', type === 'incomeCategory' || (type === 'expenseCategory' && viewport.classList.contains('plan-disabled')));
+
+      const title = target?.querySelector('.asset-copy strong, .category-copy strong, .broker-name strong')?.textContent.trim() || '';
+      document.getElementById('recordName').value = title;
+      document.getElementById('recordKind').value = target?.dataset.kind === 'Наличные' ? 'Наличные' : 'Карта';
+      const value = target?.querySelector('.fund-input, .asset-value, .amount-input, .broker-value strong')?.value
+        || target?.querySelector('.fund-input, .asset-value, .amount-input, .broker-value strong')?.textContent
+        || '';
+      document.getElementById('recordValue').value = value;
+      recordModal.classList.add('open');
+      window.setTimeout(() => document.getElementById('recordName').focus(), 260);
+    }
+
+    function closeRecordEditor() {
+      recordModal.classList.remove('open');
+      recordTarget = null;
+    }
+
+    function openLoanEditor(target = null) {
+      selectedLoan = target;
+      refreshAccountOptions();
+      document.getElementById('loanTitle').textContent = target ? 'Настроить долг' : 'Дать в долг';
+      document.getElementById('loanPerson').value = target?.querySelector('.asset-copy strong')?.textContent.trim() || '';
+      document.getElementById('loanAmount').value = target ? formatMoney(Number(target.dataset.value || 0)) : '';
+      if (target?.dataset.accountId) document.getElementById('loanAccount').value = target.dataset.accountId;
+      loanModal.classList.add('open');
+      window.setTimeout(() => document.getElementById('loanPerson').focus(), 260);
+    }
+
+    function closeLoanEditor() {
+      loanModal.classList.remove('open');
+      selectedLoan = null;
+    }
+
+    function openCreditPayment(row) {
+      selectedLiability = row;
+      document.getElementById('creditPaymentTitle').textContent = `Платёж: ${row.querySelector('.asset-copy strong').textContent.trim()}`;
+      document.getElementById('creditPaymentBalance').textContent = formatMoney(Number(row.dataset.value || 0));
+      document.getElementById('creditPrincipal').value = '';
+      document.getElementById('creditInterest').value = '';
+      refreshAccountOptions();
+      document.getElementById('creditPaymentAccount').innerHTML = operationAccount.innerHTML;
+      creditPaymentModal.classList.add('open');
+      window.setTimeout(() => document.getElementById('creditPrincipal').focus(), 260);
+    }
+
+    function closeCreditPayment() {
+      creditPaymentModal.classList.remove('open');
+      selectedLiability = null;
+    }
+
+    function renderStatistics(type, period = 'annual', year = selectedStatsYear) {
+      currentStatistics = type;
+      selectedStatsYear = year;
+      const data = statistics[type];
+      const hasData = year === '2026';
+      const currentPeriod = getPeriodState();
+      const visibleMonthCount = Number(year) === currentPeriod.year ? currentPeriod.monthIndex + 1 : 12;
+      const months = hasData ? data.months.slice(0, visibleMonthCount) : [];
+      const total = hasData ? data.total : 0;
+      const maximum = months.length ? Math.max(...months) : 0;
+      const bestIndex = months.indexOf(maximum);
+      document.getElementById('statsTitle').textContent = data.title;
+      document.getElementById('statsYear').value = year;
+      document.getElementById('statsTotal').textContent = hasData ? formatMoney(total) : 'Нет данных';
+      document.getElementById('statsAverage').textContent = hasData ? formatMoney(total / months.length) : '—';
+      document.getElementById('statsPeakLabel').textContent = type === 'expense' ? 'Большие траты' : 'Лучший месяц';
+      document.getElementById('statsBest').textContent = hasData ? `${monthNames[bestIndex]} · ${formatMoney(maximum)}` : '—';
+      document.getElementById('monthlyChart').innerHTML = months.map((value, index) => `
+        <div class="month-column">
+          <b>${Math.round(value / 1000)} тыс.</b>
+          <div class="month-bar" style="height:${Math.max(5, maximum ? value / maximum * 100 : 0)}%"></div>
+          <span>${monthNames[index]}</span>
+        </div>`).join('');
+      statsSheet.classList.toggle('stats-expense', type === 'expense');
+      document.getElementById('statsAnnual').style.display = period === 'annual' ? 'grid' : 'none';
+      document.getElementById('monthlyChart').classList.toggle('active', period === 'monthly');
+      document.getElementById('statsCaption').textContent = hasData
+        ? (period === 'annual' ? `Итого за ${year} год` : `Динамика за ${year} год`)
+        : `За ${year} год операций нет`;
+      document.querySelectorAll('[data-stats-period]').forEach(button => button.classList.toggle('active', button.dataset.statsPeriod === period));
+    }
+
+    function renderStatisticsPage() {
+      const year = document.getElementById('statisticsPageYear').value;
+      const flow = getYearFlow(year);
+      const incomeMonths = flow.income;
+      const expenseMonths = flow.expense;
+      const incomeTotal = incomeMonths.reduce((sum, value) => sum + value, 0);
+      const expenseTotal = expenseMonths.reduce((sum, value) => sum + value, 0);
+      const net = incomeTotal - expenseTotal;
+      const netOutput = document.getElementById('statisticsNetTotal');
+      netOutput.textContent = `${net > 0 ? '+' : net < 0 ? '−' : ''}${formatMoney(Math.abs(net))}`;
+      netOutput.style.color = net > 0 ? '#a9d8c9' : net < 0 ? '#efb0a7' : '#fff';
+      document.getElementById('statisticsIncomeTotal').textContent = formatMoney(incomeTotal);
+      document.getElementById('statisticsExpenseTotal').textContent = formatMoney(expenseTotal);
+
+      const currentPeriod = getPeriodState();
+      const monthResult = document.getElementById('statisticsMonthResult');
+      const isCurrentYear = Number(year) === currentPeriod.year;
+      monthResult.style.display = isCurrentYear ? 'flex' : 'none';
+      if (isCurrentYear) {
+        const monthNet = incomeMonths[currentPeriod.monthIndex] - expenseMonths[currentPeriod.monthIndex];
+        const monthOutput = document.getElementById('statisticsMonthNet');
+        document.getElementById('statisticsMonthLabel').textContent = `Результат за ${currentPeriod.shortTitle}`;
+        monthOutput.textContent = `${monthNet > 0 ? '+' : monthNet < 0 ? '−' : ''}${formatMoney(Math.abs(monthNet))}`;
+        monthOutput.style.color = monthNet > 0 ? '#a9d8c9' : monthNet < 0 ? '#efb0a7' : '#fff';
+      }
+
+      const maximum = Math.max(1, ...incomeMonths, ...expenseMonths);
+      document.getElementById('monthlyStatisticsList').innerHTML = monthNames.map((month, index) => {
+        const monthNet = incomeMonths[index] - expenseMonths[index];
+        return `<button class="monthly-stat-row" data-history-year="${year}" data-history-month="${index}" aria-label="Открыть историю за ${month}">
+          <div class="monthly-stat-head"><strong>${month}</strong><span class="income-value">${formatMoney(incomeMonths[index])}</span><span class="expense-value">${formatMoney(expenseMonths[index])}</span></div>
+          <div class="dual-bars"><i class="income-bar" style="width:${incomeMonths[index] / maximum * 100}%"></i><i class="expense-bar" style="width:${expenseMonths[index] / maximum * 100}%"></i></div>
+          <small class="month-net">Итог ${monthNet >= 0 ? '+' : '−'}${formatMoney(Math.abs(monthNet))} · История ›</small>
+        </button>`;
+      }).join('');
+
+      const rows = [...document.querySelectorAll('#expenseList .category-row')];
+      document.getElementById('categoryStatisticsList').innerHTML = rows.map(row => {
+        const name = row.querySelector('.category-copy strong').textContent.trim();
+        const monthlyValues = monthNames.map((month, index) => ({ month, value: expenseHistory.get(`${year}-${index}-${name}`) || 0 })).filter(item => item.value > 0);
+        const spent = monthlyValues.reduce((sum, item) => sum + item.value, 0);
+        const details = monthlyValues.length
+          ? `<div class="category-months">${monthlyValues.map(item => `<div class="category-month"><span>${item.month}</span><strong>${formatMoney(item.value)}</strong></div>`).join('')}</div>`
+          : `<small class="category-empty">Нет операций за ${year} год</small>`;
+        return `<div class="category-stat-row"><div class="category-stat-head"><strong>${escapeHtml(name)}</strong><span>${formatMoney(spent)}</span></div>${details}</div>`;
+      }).join('') || '<p class="empty-state">Добавьте статьи расходов в настройках</p>';
+    }
+
+    document.querySelectorAll('[data-stat]').forEach(button => {
+      button.addEventListener('click', () => {
+        renderStatistics(button.dataset.stat);
+        statsModal.classList.add('open');
+      });
+    });
+    document.querySelectorAll('[data-stats-period]').forEach(button => {
+      button.addEventListener('click', () => renderStatistics(currentStatistics, button.dataset.statsPeriod));
+    });
+    document.getElementById('statsYear').addEventListener('change', event => {
+      const period = document.querySelector('[data-stats-period].active')?.dataset.statsPeriod || 'annual';
+      renderStatistics(currentStatistics, period, event.target.value);
+    });
+    statsModal.addEventListener('click', event => { if (event.target === statsModal) statsModal.classList.remove('open'); });
+
+    function enableSheetDismiss(backdrop, closeHandler) {
+      const sheet = backdrop.querySelector('.sheet');
+      const handle = backdrop.querySelector('.sheet-handle');
+      let startY = 0;
+      let distance = 0;
+      let dragging = false;
+      handle.addEventListener('pointerdown', event => {
+        startY = event.clientY;
+        distance = 0;
+        dragging = true;
+        handle.setPointerCapture(event.pointerId);
+        sheet.style.transition = 'none';
+      });
+      handle.addEventListener('pointermove', event => {
+        if (!dragging) return;
+        distance = Math.max(0, event.clientY - startY);
+        sheet.style.transform = `translateY(${distance}px)`;
+      });
+      const finish = () => {
+        if (!dragging) return;
+        dragging = false;
+        sheet.style.transition = '';
+        sheet.style.transform = '';
+        if (distance > 72) closeHandler();
+      };
+      handle.addEventListener('pointerup', finish);
+      handle.addEventListener('pointercancel', finish);
+    }
+
+    enableSheetDismiss(statsModal, () => statsModal.classList.remove('open'));
+    enableSheetDismiss(modal, closeOperation);
+    enableSheetDismiss(recordModal, closeRecordEditor);
+    enableSheetDismiss(loanModal, closeLoanEditor);
+    enableSheetDismiss(creditPaymentModal, closeCreditPayment);
+    enableSheetDismiss(brokerOperationModal, closeBrokerOperation);
+    enableSheetDismiss(monthHistoryModal, () => monthHistoryModal.classList.remove('open'));
+    monthHistoryModal.addEventListener('click', event => { if (event.target === monthHistoryModal) monthHistoryModal.classList.remove('open'); });
+
+    const settingsScreen = document.querySelector('.settings-screen');
+
+    function showSettingsHub() {
+      settingsScreen.classList.remove('settings-subpage-open');
+      settingsScreen.querySelectorAll('.settings-subpage').forEach(page => page.classList.remove('active'));
+      settingsScreen.scrollTop = 0;
+    }
+
+    document.querySelectorAll('[data-settings-page]').forEach(button => {
+      button.addEventListener('click', () => {
+        settingsScreen.querySelectorAll('.settings-subpage').forEach(page => page.classList.toggle('active', page.id === button.dataset.settingsPage));
+        settingsScreen.classList.add('settings-subpage-open');
+        settingsScreen.scrollTop = 0;
+      });
+    });
+    document.querySelectorAll('[data-settings-back]').forEach(button => button.addEventListener('click', showSettingsHub));
+
+    document.getElementById('openSettings').addEventListener('click', () => {
+      viewport.classList.remove('investments-open', 'statistics-open');
+      viewport.classList.add('settings-open');
+      showSettingsHub();
+    });
+    document.getElementById('closeSettings').addEventListener('click', () => {
+      viewport.classList.remove('settings-open', 'investments-open', 'statistics-open');
+    });
+
+    document.getElementById('exportBackup').addEventListener('click', () => {
+      const data = {};
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (key && key.startsWith('budget-')) data[key] = localStorage.getItem(key);
+      }
+      const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), data }, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `budget-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast('Резервная копия создана');
+    });
+    const importBackupFile = document.getElementById('importBackupFile');
+    document.getElementById('importBackup').addEventListener('click', () => importBackupFile.click());
+    importBackupFile.addEventListener('change', async () => {
+      const file = importBackupFile.files[0];
+      if (!file) return;
+      try {
+        const backup = JSON.parse(await file.text());
+        if (!backup.data || typeof backup.data !== 'object') throw new Error('Invalid backup');
+        Object.entries(backup.data).forEach(([key, value]) => { if (key.startsWith('budget-')) localStorage.setItem(key, value); });
+        showToast('Копия восстановлена');
+        window.setTimeout(() => window.location.reload(), 500);
+      } catch (error) {
+        showToast('Не удалось прочитать файл');
+      } finally {
+        importBackupFile.value = '';
+      }
+    });
+    const securityToggle = document.getElementById('securityToggle');
+    securityToggle.checked = readStorage('budget-security-enabled', false) === true;
+    securityToggle.addEventListener('change', () => {
+      writeStorage('budget-security-enabled', securityToggle.checked);
+      showToast(securityToggle.checked ? 'Защита включена' : 'Защита выключена');
+    });
+    document.getElementById('openInvestments').addEventListener('click', () => {
+      viewport.classList.remove('settings-open', 'statistics-open');
+      viewport.classList.add('investments-open');
+      investmentsScreen.classList.remove('detail-open');
+      capitalScroll.scrollTop = 0;
+    });
+    document.getElementById('closeInvestments').addEventListener('click', () => {
+      viewport.classList.remove('investments-open');
+      viewport.classList.remove('settings-open');
+    });
+    document.getElementById('openStatistics').addEventListener('click', () => {
+      viewport.classList.remove('settings-open', 'investments-open');
+      viewport.classList.add('statistics-open');
+      renderStatisticsPage();
+      statisticsScroll.scrollTop = 0;
+    });
+    document.getElementById('closeStatistics').addEventListener('click', () => {
+      viewport.classList.remove('statistics-open');
+    });
+    document.getElementById('statisticsPageYear').addEventListener('change', renderStatisticsPage);
+    document.getElementById('monthlyStatisticsList').addEventListener('click', event => {
+      const row = event.target.closest('[data-history-month]');
+      if (row) openMonthHistory(row.dataset.historyYear, Number(row.dataset.historyMonth));
+    });
+    document.getElementById('monthlyStatisticsList').addEventListener('pointerdown', event => {
+      event.target.closest('[data-history-month]')?.classList.add('touching');
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(type => {
+      document.getElementById('monthlyStatisticsList').addEventListener(type, () => {
+        document.querySelectorAll('.monthly-stat-row.touching').forEach(row => row.classList.remove('touching'));
+      });
+    });
+    document.querySelectorAll('[data-statistics-view]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-statistics-view]').forEach(item => item.classList.toggle('active', item === button));
+        document.querySelectorAll('.statistics-panel').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.statisticsView));
+        statisticsScroll.scrollTop = 0;
+        renderStatisticsPage();
+      });
+    });
+
+    function openBroker(row) {
+      selectedBroker = row;
+      document.getElementById('brokerDetailTitle').textContent = row.dataset.name;
+      document.getElementById('brokerDetailLogo').textContent = row.dataset.symbol;
+      document.querySelector('.broker-detail .page-heading span').textContent = row.dataset.assetType === 'savings' ? 'Сберегательный счёт' : 'Брокер';
+      document.getElementById('brokerDetailValue').textContent = row.dataset.value;
+      document.querySelector('.broker-balance-card > span').textContent = row.dataset.assetType === 'savings' ? 'Сбережения' : 'Инвестиции';
+      document.querySelector('[data-broker-action="income"] span').textContent = row.dataset.assetType === 'savings' ? 'Начислить проценты' : 'Доход';
+      document.querySelector('[data-broker-action="charge"] span').textContent = row.dataset.assetType === 'savings' ? 'Комиссия' : 'Комиссия / налог';
+      document.querySelector('[data-broker-action="revalue"]').style.display = row.dataset.assetType === 'savings' ? 'none' : 'flex';
+      renderBrokerHistory();
+      investmentsScreen.classList.add('detail-open');
+      document.querySelector('.broker-detail').scrollTop = 0;
+    }
+
+    function renderBrokerHistory() {
+      const list = document.getElementById('brokerHistoryList');
+      const entries = selectedBroker ? (brokerHistory.get(selectedBroker.dataset.name) || []) : [];
+      list.innerHTML = entries.length ? entries.map(entry => `<div class="broker-history-row ${entry.positive ? 'positive' : 'negative'}"><div><strong>${escapeHtml(entry.label)}</strong><small>${escapeHtml(entry.date)}</small></div><span>${entry.positive ? '+' : '−'}${formatMoney(entry.amount)}</span></div>`).join('') : '<div class="empty-note">Операций пока нет</div>';
+    }
+
+    function openBrokerOperation(type) {
+      brokerOperationType = type;
+      const settings = {
+        deposit: ['Пополнить брокера', 'Перевод с карты или из наличных', [], 'Списать с'],
+        withdraw: ['Вывести от брокера', 'Перевод на карту или в наличные', [], 'Зачислить на'],
+        income: ['Зачислить доход', 'Доход увеличит счёт и капитал', selectedBroker?.dataset.assetType === 'savings' ? ['Проценты по сбережениям'] : ['Дивиденды', 'Купоны'], ''],
+        charge: ['Списать у брокера', 'Списание уменьшит портфель и капитал', ['Комиссия брокера', 'Налог'], ''],
+        revalue: ['Обновить стоимость', 'Укажите актуальную рыночную стоимость портфеля', [], '']
+      }[type];
+      document.getElementById('brokerOperationTitle').textContent = settings[0];
+      document.getElementById('brokerOperationSubtitle').textContent = settings[1];
+      const kindGroup = document.getElementById('brokerOperationKindGroup');
+      kindGroup.classList.toggle('hidden', settings[2].length === 0);
+      document.getElementById('brokerOperationKind').innerHTML = settings[2].map(item => `<option>${item}</option>`).join('');
+      const accountGroup = document.getElementById('brokerOperationAccountGroup');
+      accountGroup.classList.toggle('hidden', type === 'income' || type === 'charge' || type === 'revalue');
+      document.getElementById('brokerOperationAccountLabel').textContent = settings[3];
+      document.querySelector('label[for="brokerOperationAmount"]').textContent = type === 'revalue' ? 'Новая стоимость' : 'Сумма';
+      const confirmButton = document.getElementById('saveBrokerOperation');
+      confirmButton.textContent = type === 'revalue' ? 'Обновить' : 'Добавить';
+      confirmButton.classList.toggle('revalue-confirm', type === 'revalue');
+      refreshAccountOptions();
+      document.getElementById('brokerOperationAccount').innerHTML = operationAccount.innerHTML;
+      document.getElementById('brokerOperationAmount').value = type === 'revalue' ? selectedBroker.dataset.value : '';
+      brokerOperationModal.classList.add('open');
+      window.setTimeout(() => document.getElementById('brokerOperationAmount').focus(), 260);
+    }
+
+    function closeBrokerOperation() { brokerOperationModal.classList.remove('open'); }
+
+    brokerList.addEventListener('click', event => {
+      const row = event.target.closest('.broker-row');
+      if (row && row.dataset.swiped !== 'true') openBroker(row);
+    });
+    document.getElementById('savingsList').addEventListener('click', event => {
+      const row = event.target.closest('.savings-row');
+      if (row && row.dataset.swiped !== 'true') openBroker(row);
+    });
+
+    document.getElementById('closeBroker').addEventListener('click', () => {
+      investmentsScreen.classList.remove('detail-open');
+      capitalScroll.scrollTop = 0;
+    });
+
+    document.querySelectorAll('[data-broker-action]').forEach(button => {
+      button.addEventListener('click', () => openBrokerOperation(button.dataset.brokerAction));
+    });
+    document.getElementById('cancelBrokerOperation').addEventListener('click', closeBrokerOperation);
+    brokerOperationModal.addEventListener('click', event => { if (event.target === brokerOperationModal) closeBrokerOperation(); });
+    document.getElementById('saveBrokerOperation').addEventListener('click', () => {
+      if (!selectedBroker) return;
+      const amountField = document.getElementById('brokerOperationAmount');
+      const amount = parseLocalizedMoney(amountField.value);
+      if (amount <= 0) { amountField.focus(); return; }
+      const brokerValue = parseLocalizedMoney(selectedBroker.dataset.value);
+      const isRevalue = brokerOperationType === 'revalue';
+      const difference = isRevalue ? amount - brokerValue : amount;
+      const isPositive = isRevalue ? difference >= 0 : brokerOperationType === 'deposit' || brokerOperationType === 'income';
+      if (isRevalue && difference === 0) { showToast('Стоимость не изменилась'); return; }
+      if (!isRevalue && !isPositive && amount > brokerValue) { showToast('Недостаточно средств у брокера'); return; }
+
+      let label = '';
+      if (isRevalue) {
+        label = 'Переоценка портфеля';
+      } else if (brokerOperationType === 'deposit' || brokerOperationType === 'withdraw') {
+        const accountId = document.getElementById('brokerOperationAccount').value;
+        const accountRow = [...document.querySelectorAll('.fund-row')].find(row => row.dataset.accountId === accountId);
+        if (!accountRow) { showToast('Выберите карту или наличные'); return; }
+        const input = accountRow.querySelector('.fund-input');
+        const accountValue = parseLocalizedMoney(input.value);
+        if (brokerOperationType === 'deposit' && amount > accountValue) { showToast('Недостаточно средств на счёте'); return; }
+        input.value = formatMoneyCents(brokerOperationType === 'deposit' ? accountValue - amount : accountValue + amount);
+        label = brokerOperationType === 'deposit' ? 'Пополнение портфеля' : 'Вывод из портфеля';
+      } else {
+        label = document.getElementById('brokerOperationKind').value;
+        const period = getPeriodState();
+        const flow = getYearFlow(period.year, true);
+        const flowType = brokerOperationType === 'income' ? 'income' : 'expense';
+        flow[flowType][period.monthIndex] += amount;
+        if (brokerOperationType === 'charge') {
+          const historyKey = `${period.year}-${period.monthIndex}-Комиссии и налоги`;
+          expenseHistory.set(historyKey, (expenseHistory.get(historyKey) || 0) + amount);
+        }
+        addLedgerEntry(flowType, amount, label, selectedBroker.dataset.name);
+      }
+
+      const nextValue = isRevalue ? amount : isPositive ? brokerValue + amount : brokerValue - amount;
+      selectedBroker.dataset.value = formatMoney(nextValue);
+      selectedBroker.querySelector('.broker-value strong').textContent = formatMoney(nextValue);
+      document.getElementById('brokerDetailValue').textContent = formatMoney(nextValue);
+      const entries = brokerHistory.get(selectedBroker.dataset.name) || [];
+      entries.unshift({ label, amount: Math.abs(difference), positive: isPositive, date: new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()) });
+      brokerHistory.set(selectedBroker.dataset.name, entries);
+      writeStorage('budget-broker-history', Object.fromEntries(brokerHistory));
+      persistBrokerValues();
+      renderBrokerHistory();
+      updateBalance();
+      persistPlanState();
+      closeBrokerOperation();
+      showToast('Операция добавлена');
+    });
+
+    document.getElementById('cancelRecord').addEventListener('click', closeRecordEditor);
+    recordModal.addEventListener('click', event => { if (event.target === recordModal) closeRecordEditor(); });
+    document.getElementById('saveRecord').addEventListener('click', () => {
+      const name = document.getElementById('recordName').value.trim();
+      if (!name) { document.getElementById('recordName').focus(); return; }
+      const safeName = escapeHtml(name);
+      const value = parseLocalizedMoney(document.getElementById('recordValue').value);
+
+      if (recordTarget) {
+        const title = recordTarget.querySelector('.asset-copy strong, .category-copy strong');
+        const previousName = title?.textContent.trim() || '';
+        if (title) title.textContent = name;
+        const icon = recordTarget.querySelector('.asset-icon, .category-symbol');
+        if (icon) icon.textContent = name.charAt(0).toUpperCase();
+        if (recordType === 'fund') {
+          recordTarget.dataset.kind = document.getElementById('recordKind').value;
+          recordTarget.querySelector('.asset-copy span').textContent = recordTarget.dataset.kind === 'Карта' ? 'Банковская карта' : `Место хранения: ${name}`;
+          recordTarget.querySelector('.fund-input').value = formatMoneyCents(value);
+          updateBalance();
+        } else if (recordType === 'expenseCategory') {
+          recordTarget.querySelector('.amount-input').value = formatMoney(value);
+          if (previousName !== name && expenseSpent.has(previousName)) {
+            expenseSpent.set(name, (expenseSpent.get(name) || 0) + expenseSpent.get(previousName));
+            expenseSpent.delete(previousName);
+          }
+          if (previousName !== name) {
+            [...expenseHistory.entries()].forEach(([key, amount]) => {
+              if (!key.endsWith(`-${previousName}`)) return;
+              const renamedKey = `${key.slice(0, -previousName.length)}${name}`;
+              expenseHistory.set(renamedKey, (expenseHistory.get(renamedKey) || 0) + amount);
+              expenseHistory.delete(key);
+            });
+          }
+          updatePlanSummary();
+        } else if (recordType === 'broker' || recordType === 'savings') {
+          const previousBrokerName = recordTarget.dataset.name;
+          recordTarget.dataset.name = name;
+          recordTarget.dataset.symbol = name.charAt(0).toUpperCase();
+          recordTarget.dataset.value = formatMoney(value);
+          recordTarget.querySelector('.broker-logo').textContent = recordTarget.dataset.symbol;
+          recordTarget.querySelector('.broker-name strong').textContent = name;
+          recordTarget.querySelector('.broker-value strong').textContent = formatMoney(value);
+          if (previousBrokerName !== name && brokerHistory.has(previousBrokerName)) {
+            brokerHistory.set(name, brokerHistory.get(previousBrokerName));
+            brokerHistory.delete(previousBrokerName);
+          }
+          updateCapitalTotal();
+          persistBrokerValues();
+        } else if (recordType !== 'incomeCategory') {
+          recordTarget.dataset.value = String(Math.round(value));
+          recordTarget.querySelector('.asset-value').textContent = formatMoney(value);
+          updateCapitalTotal();
+        }
+        showToast('Изменения сохранены');
+        closeRecordEditor();
+        return;
+      }
+
+      if (recordType === 'fund') {
+        const kind = document.getElementById('recordKind').value;
+        const row = document.createElement('div');
+        row.className = 'fund-row';
+        row.dataset.kind = kind;
+        row.innerHTML = `<span class="asset-icon">${kind === 'Карта' ? 'К' : 'Н'}</span><span class="asset-copy"><strong>${safeName}</strong><span>${kind === 'Карта' ? 'Банковская карта' : `Место хранения: ${safeName}`}</span></span><input class="fund-input" value="${formatMoneyCents(value)}" readonly tabindex="-1" />`;
+        document.getElementById('fundList').appendChild(row);
+        bindFundInput(row.querySelector('.fund-input'));
+        prepareCapitalSwipeItems();
+        updateBalance();
+      } else if (recordType === 'asset' || recordType === 'liability') {
+        const row = document.createElement('div');
+        row.className = recordType === 'liability' ? 'asset-row liability-row' : 'asset-row';
+        row.dataset.value = String(Math.round(value));
+        if (recordType === 'liability') row.dataset.interestPaid = '0';
+        row.innerHTML = `<span class="asset-icon">${name.charAt(0).toUpperCase()}</span><span class="asset-copy"><strong>${safeName}</strong><span>${recordType === 'liability' ? 'Выплачено процентов: 0 ₽' : 'Личный актив'}</span></span><strong class="asset-value">${formatMoney(value)}</strong>`;
+        document.getElementById(recordType === 'liability' ? 'liabilityList' : 'assetList').appendChild(row);
+        prepareCapitalSwipeItems();
+        updateCapitalTotal();
+        persistBrokerValues();
+      } else if (recordType === 'broker' || recordType === 'savings') {
+        const row = document.createElement('button');
+        row.className = recordType === 'savings' ? 'broker-row savings-row' : 'broker-row';
+        Object.assign(row.dataset, { name, symbol: name.charAt(0).toUpperCase(), value: formatMoney(value) });
+        if (recordType === 'savings') row.dataset.assetType = 'savings';
+        row.innerHTML = `<span class="broker-logo">${row.dataset.symbol}</span><span class="broker-name"><strong>${safeName}</strong></span><span class="broker-value"><strong>${formatMoney(value)}</strong></span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>`;
+        document.getElementById(recordType === 'savings' ? 'savingsList' : 'brokerList').appendChild(row);
+        prepareCapitalSwipeItems();
+        updateCapitalTotal();
+      } else if (recordType === 'expenseCategory' || recordType === 'incomeCategory') {
+        const row = document.createElement('div');
+        row.className = recordType === 'expenseCategory' ? 'category-row' : 'income-row';
+        row.innerHTML = recordType === 'expenseCategory'
+          ? `<span class="category-symbol">${name.charAt(0).toUpperCase()}</span><span class="category-copy"><strong>${safeName}</strong></span><input class="amount-input plan-input" value="${formatMoney(value)}" readonly tabindex="-1" />`
+          : `<span class="category-symbol">${name.charAt(0).toUpperCase()}</span><span class="category-copy"><strong>${safeName}</strong></span>`;
+        const targetList = document.getElementById(recordType === 'expenseCategory' ? 'expenseList' : 'incomeList');
+        targetList.insertBefore(row, targetList.querySelector('.add-list-row'));
+        categories[recordType === 'expenseCategory' ? 'expense' : 'income'].push(name);
+        prepareSwipeItems();
+        if (recordType === 'expenseCategory') updatePlanSummary();
+      }
+      closeRecordEditor();
+      showToast('Запись добавлена');
+    });
+
+    document.getElementById('addLoan').addEventListener('click', () => openLoanEditor());
+    document.getElementById('cancelLoan').addEventListener('click', closeLoanEditor);
+    loanModal.addEventListener('click', event => { if (event.target === loanModal) closeLoanEditor(); });
+    document.getElementById('saveLoan').addEventListener('click', () => {
+      const person = document.getElementById('loanPerson').value.trim();
+      const amount = parseLocalizedMoney(document.getElementById('loanAmount').value);
+      const accountId = document.getElementById('loanAccount').value;
+      const accountRow = [...document.querySelectorAll('.fund-row')].find(row => row.dataset.accountId === accountId);
+      if (!person) { document.getElementById('loanPerson').focus(); return; }
+      if (amount <= 0) { document.getElementById('loanAmount').focus(); return; }
+      if (!accountRow) { showToast('Добавьте карту или наличные'); return; }
+
+      const targetBalance = parseLocalizedMoney(accountRow.querySelector('.fund-input').value);
+      const refundableAmount = selectedLoan?.dataset.accountId === accountId ? Number(selectedLoan.dataset.value || 0) : 0;
+      if (amount > targetBalance + refundableAmount) { showToast('Недостаточно средств на счёте'); return; }
+
+      if (selectedLoan) {
+        const oldAccount = [...document.querySelectorAll('.fund-row')].find(row => row.dataset.accountId === selectedLoan.dataset.accountId);
+        if (oldAccount) {
+          const oldInput = oldAccount.querySelector('.fund-input');
+          oldInput.value = formatMoneyCents(parseLocalizedMoney(oldInput.value) + Number(selectedLoan.dataset.value || 0));
+        }
+      }
+
+      const accountInput = accountRow.querySelector('.fund-input');
+      accountInput.value = formatMoneyCents(parseLocalizedMoney(accountInput.value) - amount);
+      const accountName = accountRow.querySelector('.asset-copy strong').textContent.trim();
+
+      if (selectedLoan) {
+        selectedLoan.dataset.value = String(amount);
+        selectedLoan.dataset.accountId = accountId;
+        selectedLoan.querySelector('.asset-copy strong').textContent = person;
+        selectedLoan.querySelector('.asset-copy span').textContent = `Выдано с: ${accountName}`;
+        selectedLoan.querySelector('.asset-icon').textContent = person.charAt(0).toUpperCase();
+        selectedLoan.querySelector('.asset-value').textContent = formatMoney(amount);
+      } else {
+        const row = document.createElement('div');
+        row.className = 'asset-row loan-row';
+        row.dataset.value = String(amount);
+        row.dataset.accountId = accountId;
+        row.innerHTML = `<span class="asset-icon">${person.charAt(0).toUpperCase()}</span><span class="asset-copy"><strong>${escapeHtml(person)}</strong><span>Выдано с: ${escapeHtml(accountName)}</span></span><strong class="asset-value">${formatMoney(amount)}</strong>`;
+        document.getElementById('loanList').appendChild(row);
+        document.getElementById('loanEmpty').style.display = 'none';
+        prepareCapitalSwipeItems();
+      }
+      updateBalance();
+      closeLoanEditor();
+      showToast('Долг сохранён');
+    });
+
+    document.getElementById('liabilityList').addEventListener('click', event => {
+      const row = event.target.closest('.liability-row');
+      if (!row || event.target.closest('.swipe-actions') || row.closest('.swipe-item')?.classList.contains('open')) return;
+      openCreditPayment(row);
+    });
+    document.getElementById('cancelCreditPayment').addEventListener('click', closeCreditPayment);
+    creditPaymentModal.addEventListener('click', event => { if (event.target === creditPaymentModal) closeCreditPayment(); });
+    document.getElementById('saveCreditPayment').addEventListener('click', () => {
+      if (!selectedLiability) return;
+      const principal = parseLocalizedMoney(document.getElementById('creditPrincipal').value);
+      const interest = parseLocalizedMoney(document.getElementById('creditInterest').value);
+      const payment = principal + interest;
+      const debtBalance = Number(selectedLiability.dataset.value || 0);
+      if (payment <= 0) { document.getElementById('creditPrincipal').focus(); return; }
+      if (principal > debtBalance) { showToast('Тело платежа больше остатка кредита'); return; }
+      const accountId = document.getElementById('creditPaymentAccount').value;
+      const accountRow = [...document.querySelectorAll('.fund-row')].find(row => row.dataset.accountId === accountId);
+      if (!accountRow) { showToast('Выберите карту или наличные'); return; }
+      const accountInput = accountRow.querySelector('.fund-input');
+      const accountBalance = parseLocalizedMoney(accountInput.value);
+      if (payment > accountBalance) { showToast('Недостаточно средств на счёте'); return; }
+
+      accountInput.value = formatMoneyCents(accountBalance - payment);
+      const nextDebt = debtBalance - principal;
+      const totalInterest = Number(selectedLiability.dataset.interestPaid || 0) + interest;
+      selectedLiability.dataset.value = String(nextDebt);
+      selectedLiability.dataset.interestPaid = String(totalInterest);
+      selectedLiability.querySelector('.asset-value').textContent = formatMoney(nextDebt);
+      selectedLiability.querySelector('.asset-copy span').textContent = `Выплачено процентов: ${formatMoney(totalInterest)}`;
+
+      if (interest > 0) {
+        const period = getPeriodState();
+        const flow = getYearFlow(period.year, true);
+        flow.expense[period.monthIndex] += interest;
+        const historyKey = `${period.year}-${period.monthIndex}-Проценты по кредитам`;
+        expenseHistory.set(historyKey, (expenseHistory.get(historyKey) || 0) + interest);
+        addLedgerEntry('expense', interest, `Проценты: ${selectedLiability.querySelector('.asset-copy strong').textContent.trim()}`, accountRow.querySelector('.asset-copy strong').textContent.trim());
+      }
+      writeStorage('budget-liability-state', Object.fromEntries([...document.querySelectorAll('.liability-row')].map(row => [row.querySelector('.asset-copy strong').textContent.trim(), { value: Number(row.dataset.value || 0), interest: Number(row.dataset.interestPaid || 0) }])));
+      updateBalance();
+      persistPlanState();
+      closeCreditPayment();
+      showToast('Платёж проведён');
+    });
+
+    document.getElementById('addBroker').addEventListener('click', () => {
+      openRecordEditor('broker');
+    });
+    document.getElementById('addSavings').addEventListener('click', () => {
+      openRecordEditor('savings');
+    });
+
+    document.getElementById('addFund').addEventListener('click', () => {
+      openRecordEditor('fund');
+    });
+
+    document.getElementById('addAsset').addEventListener('click', () => {
+      openRecordEditor('asset');
+    });
+
+    document.getElementById('addLiability').addEventListener('click', () => {
+      openRecordEditor('liability');
+    });
+
+    document.querySelectorAll('[data-operation]').forEach(button => {
+      button.addEventListener('click', () => openOperation(button.dataset.operation));
+    });
+
+    document.getElementById('cancelOperation').addEventListener('click', closeOperation);
+    modal.addEventListener('click', event => { if (event.target === modal) closeOperation(); });
+    document.getElementById('confirmOperation').addEventListener('click', () => {
+      const amount = parseLocalizedMoney(amountField.value);
+      if (amount <= 0) { amountField.focus(); return; }
+      const accountRow = [...document.querySelectorAll('.fund-row')].find(row => row.dataset.accountId === operationAccount.value);
+      if (!accountRow) { showToast('Добавьте карту или наличные'); return; }
+      const accountInput = accountRow.querySelector('.fund-input');
+      const accountBalance = parseLocalizedMoney(accountInput.value);
+      if (currentOperation === 'expense' && amount > accountBalance) { showToast('Недостаточно средств на счёте'); return; }
+      accountInput.value = formatMoneyCents(currentOperation === 'income' ? accountBalance + amount : accountBalance - amount);
+      const currentPeriod = getPeriodState();
+      const currentFlow = getYearFlow(currentPeriod.year, true);
+      currentFlow[currentOperation][currentPeriod.monthIndex] += amount;
+      if (currentOperation === 'expense') {
+        const category = categorySelect.value;
+        expenseSpent.set(category, (expenseSpent.get(category) || 0) + amount);
+        const historyKey = `${currentPeriod.year}-${currentPeriod.monthIndex}-${category}`;
+        expenseHistory.set(historyKey, (expenseHistory.get(historyKey) || 0) + amount);
+        updatePlanSummary();
+      }
+      addLedgerEntry(currentOperation, amount, categorySelect.value, accountRow.querySelector('.asset-copy strong').textContent.trim());
+      updateBalance();
+      updateMonthlyNet();
+      persistPlanState();
+      if (viewport.classList.contains('statistics-open')) renderStatisticsPage();
+      closeOperation();
+      showToast(currentOperation === 'income' ? 'Поступление зачислено' : 'Трата списана');
+    });
+
+    document.querySelectorAll('[data-tab]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-tab]').forEach(item => item.classList.toggle('active', item === button));
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.tab));
+      });
+    });
+
+    document.querySelectorAll('[data-capital-tab]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-capital-tab]').forEach(item => item.classList.toggle('active', item === button));
+        document.querySelectorAll('.capital-panel').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.capitalTab));
+        capitalScroll.scrollTop = 0;
+      });
+    });
+
+    function closeSwipeItems(except = null) {
+      document.querySelectorAll('.swipe-item.open').forEach(item => {
+        if (item !== except) item.classList.remove('open');
+      });
+    }
+
+    function prepareSwipeItems() {
+      document.querySelectorAll('.category-row:not(.swipe-content), .income-row:not(.swipe-content)').forEach(row => {
+        const planInput = row.querySelector('.amount-input');
+        if (planInput) {
+          planInput.readOnly = true;
+          planInput.tabIndex = -1;
+        }
+        const wrapper = document.createElement('div');
+        wrapper.className = 'swipe-item';
+        const actions = document.createElement('div');
+        actions.className = 'swipe-actions';
+        actions.innerHTML = `
+          <button class="swipe-action rename" aria-label="Переименовать статью">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>
+            <span>Настроить</span>
+          </button>
+          <button class="swipe-action delete" aria-label="Удалить статью">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg>
+            <span>Удалить</span>
+          </button>`;
+        row.parentNode.insertBefore(wrapper, row);
+        wrapper.append(actions, row);
+        row.classList.add('swipe-content');
+
+        let startX = 0;
+        let currentX = 0;
+        let baseX = 0;
+        let dragging = false;
+
+        row.addEventListener('pointerdown', event => {
+          if (event.target.closest('input')) return;
+          startX = event.clientX;
+          baseX = wrapper.classList.contains('open') ? 152 : 0;
+          currentX = baseX;
+          dragging = true;
+          row.setPointerCapture(event.pointerId);
+          closeSwipeItems(wrapper);
+        });
+
+        row.addEventListener('pointermove', event => {
+          if (!dragging) return;
+          const delta = event.clientX - startX;
+          currentX = Math.max(0, Math.min(152, baseX + delta));
+          actions.style.opacity = currentX > 8 ? '1' : '0';
+          if (Math.abs(delta) > 6) row.style.transition = 'none';
+          row.style.transform = `translateX(${currentX}px)`;
+        });
+
+        const finishSwipe = () => {
+          if (!dragging) return;
+          dragging = false;
+          row.style.transition = '';
+          row.style.transform = '';
+          actions.style.opacity = '';
+          wrapper.classList.toggle('open', currentX > 76);
+        };
+        row.addEventListener('pointerup', finishSwipe);
+        row.addEventListener('pointercancel', finishSwipe);
+
+        actions.querySelector('.rename').addEventListener('click', event => {
+          event.stopPropagation();
+          wrapper.classList.remove('open');
+          openRecordEditor(row.classList.contains('category-row') ? 'expenseCategory' : 'incomeCategory', row);
+        });
+
+        actions.querySelector('.delete').addEventListener('click', event => {
+          event.stopPropagation();
+          const deletedExpense = row.classList.contains('category-row') ? row.querySelector('.category-copy strong').textContent.trim() : null;
+          wrapper.style.maxHeight = `${wrapper.offsetHeight}px`;
+          requestAnimationFrame(() => {
+            wrapper.classList.add('removing');
+            window.setTimeout(() => {
+              wrapper.remove();
+              if (deletedExpense) {
+                expenseSpent.delete(deletedExpense);
+                [...expenseHistory.keys()].forEach(key => { if (key.endsWith(`-${deletedExpense}`)) expenseHistory.delete(key); });
+                updatePlanSummary();
+              }
+            }, 270);
+          });
+          showToast('Статья удалена');
+        });
+      });
+    }
+
+    function prepareCapitalSwipeItems() {
+      const selector = '.fund-row:not(.swipe-content), .broker-row:not(.swipe-content), #assetList .asset-row:not(.swipe-content), #liabilityList .asset-row:not(.swipe-content), #loanList .loan-row:not(.swipe-content)';
+      document.querySelectorAll(selector).forEach(row => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'swipe-item capital-swipe-item';
+        const actions = document.createElement('div');
+        actions.className = 'swipe-actions';
+        actions.innerHTML = `
+          <button class="swipe-action rename" aria-label="Настроить">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>
+            <span>Настроить</span>
+          </button>
+          <button class="swipe-action delete" aria-label="Удалить">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg>
+            <span>Удалить</span>
+          </button>`;
+        row.parentNode.insertBefore(wrapper, row);
+        wrapper.append(actions, row);
+        row.classList.add('swipe-content');
+
+        let startX = 0;
+        let currentX = 0;
+        let baseX = 0;
+        let dragging = false;
+
+        row.addEventListener('pointerdown', event => {
+          if (event.target.closest('input')) return;
+          startX = event.clientX;
+          baseX = wrapper.classList.contains('open') ? 152 : 0;
+          currentX = baseX;
+          dragging = true;
+          row.setPointerCapture(event.pointerId);
+          closeSwipeItems(wrapper);
+        });
+        row.addEventListener('pointermove', event => {
+          if (!dragging) return;
+          const delta = event.clientX - startX;
+          currentX = Math.max(0, Math.min(152, baseX + delta));
+          actions.style.opacity = currentX > 8 ? '1' : '0';
+          if (Math.abs(delta) > 6) {
+            row.dataset.swiped = 'true';
+            row.style.transition = 'none';
+          }
+          row.style.transform = `translateX(${currentX}px)`;
+        });
+        const finishSwipe = () => {
+          if (!dragging) return;
+          dragging = false;
+          row.style.transition = '';
+          row.style.transform = '';
+          actions.style.opacity = '';
+          wrapper.classList.toggle('open', currentX > 76);
+          window.setTimeout(() => { row.dataset.swiped = 'false'; }, 120);
+        };
+        row.addEventListener('pointerup', finishSwipe);
+        row.addEventListener('pointercancel', finishSwipe);
+
+        actions.querySelector('.rename').addEventListener('click', event => {
+          event.stopPropagation();
+          wrapper.classList.remove('open');
+          if (row.classList.contains('broker-row')) {
+            openRecordEditor(row.dataset.assetType === 'savings' ? 'savings' : 'broker', row);
+            return;
+          }
+          if (row.classList.contains('loan-row')) {
+            openLoanEditor(row);
+            return;
+          }
+          const type = row.classList.contains('fund-row') ? 'fund' : row.classList.contains('liability-row') ? 'liability' : 'asset';
+          openRecordEditor(type, row);
+        });
+
+        actions.querySelector('.delete').addEventListener('click', event => {
+          event.stopPropagation();
+          const isFund = row.classList.contains('fund-row');
+          wrapper.style.maxHeight = `${wrapper.offsetHeight}px`;
+          requestAnimationFrame(() => {
+            wrapper.classList.add('removing');
+            window.setTimeout(() => {
+              wrapper.remove();
+              if (isFund) updateBalance();
+              else updateCapitalTotal();
+              if (!document.querySelector('#loanList .loan-row')) document.getElementById('loanEmpty').style.display = '';
+            }, 270);
+          });
+          showToast('Запись удалена');
+        });
+      });
+    }
+
+    prepareSwipeItems();
+    prepareCapitalSwipeItems();
+    document.addEventListener('click', event => {
+      if (!event.target.closest('.swipe-item')) closeSwipeItems();
+    });
+
+    document.querySelectorAll('.fund-input').forEach(bindFundInput);
+    applyPlanEnabled(readStorage('budget-plan-enabled', true) !== false, false);
+    document.getElementById('planEnabledToggle').addEventListener('change', event => {
+      applyPlanEnabled(event.target.checked);
+      showToast(event.target.checked ? 'План трат включён' : 'План трат скрыт');
+    });
+    const savedLiabilityState = readStorage('budget-liability-state', {});
+    document.querySelectorAll('.liability-row').forEach(row => {
+      const name = row.querySelector('.asset-copy strong').textContent.trim();
+      const state = savedLiabilityState[name];
+      if (!state) return;
+      row.dataset.value = String(Number(state.value) || 0);
+      row.dataset.interestPaid = String(Number(state.interest) || 0);
+      row.querySelector('.asset-value').textContent = formatMoney(Number(state.value) || 0);
+      row.querySelector('.asset-copy span').textContent = `Выплачено процентов: ${formatMoney(Number(state.interest) || 0)}`;
+    });
+    const savedBrokerValues = readStorage('budget-broker-values', {});
+    readStorage('budget-savings-list', []).forEach(item => {
+      if (document.querySelector(`.savings-row[data-name="${CSS.escape(item.name)}"]`)) return;
+      const row = document.createElement('button');
+      row.className = 'broker-row savings-row';
+      Object.assign(row.dataset, { name: item.name, symbol: item.symbol, value: item.value, assetType: 'savings' });
+      row.innerHTML = `<span class="broker-logo">${escapeHtml(item.symbol)}</span><span class="broker-name"><strong>${escapeHtml(item.name)}</strong></span><span class="broker-value"><strong>${escapeHtml(item.value)}</strong></span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>`;
+      document.getElementById('savingsList').appendChild(row);
+    });
+    prepareCapitalSwipeItems();
+    document.querySelectorAll('.broker-row').forEach(row => {
+      if (savedBrokerValues[row.dataset.name] === undefined) return;
+      row.dataset.value = savedBrokerValues[row.dataset.name];
+      row.querySelector('.broker-value strong').textContent = savedBrokerValues[row.dataset.name];
+    });
+    Object.entries(readStorage('budget-broker-history', {})).forEach(([name, entries]) => brokerHistory.set(name, Array.isArray(entries) ? entries : []));
+    transactionLedger = readStorage('budget-transaction-ledger', []);
+    if (!Array.isArray(transactionLedger)) transactionLedger = [];
+    populateStatisticsYears();
+    updateBalance();
+    loadMonthlyPlanState();
+    window.setInterval(ensureCurrentPeriod, 60000);
+    window.addEventListener('focus', ensureCurrentPeriod);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) ensureCurrentPeriod(); });
+
+    document.querySelectorAll('[data-add-category]').forEach(button => {
+      button.addEventListener('click', () => {
+        openRecordEditor(button.dataset.addCategory === 'income' ? 'incomeCategory' : 'expenseCategory');
+      });
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        if (statsModal.classList.contains('open')) statsModal.classList.remove('open');
+        else if (monthHistoryModal.classList.contains('open')) monthHistoryModal.classList.remove('open');
+        else if (brokerOperationModal.classList.contains('open')) closeBrokerOperation();
+        else if (creditPaymentModal.classList.contains('open')) closeCreditPayment();
+        else if (loanModal.classList.contains('open')) closeLoanEditor();
+        else if (recordModal.classList.contains('open')) closeRecordEditor();
+        else if (modal.classList.contains('open')) closeOperation();
+        else if (investmentsScreen.classList.contains('detail-open')) investmentsScreen.classList.remove('detail-open');
+        else if (viewport.classList.contains('settings-open') && settingsScreen.classList.contains('settings-subpage-open')) showSettingsHub();
+        else if (viewport.classList.contains('statistics-open')) viewport.classList.remove('statistics-open');
+        else if (viewport.classList.contains('investments-open')) {
+          viewport.classList.remove('investments-open');
+          viewport.classList.remove('settings-open');
+        } else viewport.classList.remove('settings-open');
+      }
+    });
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
