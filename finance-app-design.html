@@ -621,6 +621,9 @@
       user-select: none;
     }
     .swipe-item.open .swipe-content { transform: translateX(152px); }
+    .capital-swipe-item, .capital-swipe-item .swipe-content { touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+    .capital-swipe-item .swipe-content { cursor: grab; }
+    .capital-swipe-item .swipe-content:active { cursor: grabbing; }
     .swipe-item.removing { max-height: 0; opacity: 0; transition: max-height 260ms ease, opacity 180ms ease; }
     .category-row {
       min-height: 62px;
@@ -2646,13 +2649,14 @@
         let currentX = 0;
         let baseX = 0;
         let dragging = false;
+        let moved = false;
 
         row.addEventListener('pointerdown', event => {
-          if (event.target.closest('input')) return;
           startX = event.clientX;
           baseX = wrapper.classList.contains('open') ? 152 : 0;
           currentX = baseX;
           dragging = true;
+          moved = false;
           row.setPointerCapture(event.pointerId);
           closeSwipeItems(wrapper);
         });
@@ -2727,13 +2731,14 @@
         let currentX = 0;
         let baseX = 0;
         let dragging = false;
+        let moved = false;
 
         row.addEventListener('pointerdown', event => {
-          if (event.target.closest('input')) return;
           startX = event.clientX;
           baseX = wrapper.classList.contains('open') ? 152 : 0;
           currentX = baseX;
           dragging = true;
+          moved = false;
           row.setPointerCapture(event.pointerId);
           closeSwipeItems(wrapper);
         });
@@ -2743,8 +2748,10 @@
           currentX = Math.max(0, Math.min(152, baseX + delta));
           actions.style.opacity = currentX > 8 ? '1' : '0';
           if (Math.abs(delta) > 6) {
+            moved = true;
             row.dataset.swiped = 'true';
             row.style.transition = 'none';
+            event.preventDefault();
           }
           row.style.transform = `translateX(${currentX}px)`;
         });
@@ -2755,10 +2762,16 @@
           row.style.transform = '';
           actions.style.opacity = '';
           wrapper.classList.toggle('open', currentX > 76);
-          window.setTimeout(() => { row.dataset.swiped = 'false'; }, 120);
+          window.setTimeout(() => { row.dataset.swiped = 'false'; }, 500);
         };
         row.addEventListener('pointerup', finishSwipe);
         row.addEventListener('pointercancel', finishSwipe);
+        row.addEventListener('click', event => {
+          if (!moved && !wrapper.classList.contains('open')) return;
+          event.preventDefault();
+          event.stopPropagation();
+          moved = false;
+        }, true);
 
         actions.querySelector('.rename').addEventListener('click', event => {
           event.stopPropagation();
