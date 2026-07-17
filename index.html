@@ -55,6 +55,7 @@
       font-feature-settings: "lnum" 1, "tnum" 1;
       letter-spacing: 0;
     }
+    input::placeholder { color: #9a9e9c; opacity: 1; }
     button { -webkit-tap-highlight-color: transparent; }
 
     .showcase {
@@ -1687,7 +1688,12 @@
     function captureRows(listSelector, rowSelector) {
       return [...document.querySelectorAll(`${listSelector} ${rowSelector}`)].map(row => {
         row.querySelectorAll('input').forEach(input => input.setAttribute('value', input.value));
-        return row.outerHTML;
+        const cleanRow = row.cloneNode(true);
+        cleanRow.classList.remove('swipe-content');
+        cleanRow.style.removeProperty('transform');
+        cleanRow.style.removeProperty('transition');
+        delete cleanRow.dataset.swiped;
+        return cleanRow.outerHTML;
       });
     }
 
@@ -1710,6 +1716,12 @@
       list.querySelectorAll(rowSelector).forEach(row => row.closest('.swipe-item')?.remove() || row.remove());
       const anchor = beforeSelector ? list.querySelector(beforeSelector) : null;
       rows.forEach(html => anchor ? anchor.insertAdjacentHTML('beforebegin', html) : list.insertAdjacentHTML('beforeend', html));
+      list.querySelectorAll(rowSelector).forEach(row => {
+        row.classList.remove('swipe-content');
+        row.style.removeProperty('transform');
+        row.style.removeProperty('transition');
+        delete row.dataset.swiped;
+      });
     }
 
     function restoreAppSnapshot() {
@@ -1869,6 +1881,10 @@
       return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character]);
     }
 
+    function editableMoneyValue(value) {
+      return parseLocalizedMoney(value) === 0 ? '' : value;
+    }
+
     function openRecordEditor(type, target = null) {
       recordType = type;
       recordTarget = target;
@@ -1893,7 +1909,7 @@
       const value = target?.querySelector('.fund-input, .asset-value, .amount-input, .broker-value strong')?.value
         || target?.querySelector('.fund-input, .asset-value, .amount-input, .broker-value strong')?.textContent
         || '';
-      document.getElementById('recordValue').value = value;
+      document.getElementById('recordValue').value = editableMoneyValue(value);
       recordModal.classList.add('open');
       window.setTimeout(() => document.getElementById('recordName').focus(), 260);
     }
@@ -1908,7 +1924,7 @@
       refreshAccountOptions();
       document.getElementById('loanTitle').textContent = target ? 'Настроить долг' : 'Дать в долг';
       document.getElementById('loanPerson').value = target?.querySelector('.asset-copy strong')?.textContent.trim() || '';
-      document.getElementById('loanAmount').value = target ? formatMoney(Number(target.dataset.value || 0)) : '';
+      document.getElementById('loanAmount').value = target ? editableMoneyValue(formatMoney(Number(target.dataset.value || 0))) : '';
       if (target?.dataset.accountId) document.getElementById('loanAccount').value = target.dataset.accountId;
       loanModal.classList.add('open');
       window.setTimeout(() => document.getElementById('loanPerson').focus(), 260);
@@ -2270,7 +2286,7 @@
       confirmButton.classList.toggle('revalue-confirm', type === 'revalue');
       refreshAccountOptions();
       document.getElementById('brokerOperationAccount').innerHTML = operationAccount.innerHTML;
-      document.getElementById('brokerOperationAmount').value = type === 'revalue' ? selectedBroker.dataset.value : '';
+      document.getElementById('brokerOperationAmount').value = type === 'revalue' ? editableMoneyValue(selectedBroker.dataset.value) : '';
       brokerOperationModal.classList.add('open');
       window.setTimeout(() => document.getElementById('brokerOperationAmount').focus(), 260);
     }
@@ -2814,6 +2830,11 @@
     });
 
     document.querySelectorAll('.fund-input').forEach(bindFundInput);
+    document.querySelectorAll('input[inputmode="decimal"], input[inputmode="numeric"]').forEach(input => {
+      input.addEventListener('focus', () => {
+        if (input.value) window.setTimeout(() => input.select(), 0);
+      });
+    });
     applyPlanEnabled(readStorage('budget-plan-enabled', true) !== false, false);
     document.getElementById('planEnabledToggle').addEventListener('change', event => {
       applyPlanEnabled(event.target.checked);
