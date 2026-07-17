@@ -2822,9 +2822,28 @@
       });
     }
 
+    function rebuildSwipeInteractions() {
+      document.querySelectorAll('.swipe-item').forEach(wrapper => {
+        const row = wrapper.querySelector(':scope > .swipe-content');
+        if (!row) return;
+        row.classList.remove('swipe-content');
+        row.style.removeProperty('transform');
+        row.style.removeProperty('transition');
+        delete row.dataset.swiped;
+        wrapper.replaceWith(row);
+      });
+      document.querySelectorAll('.swipe-content').forEach(row => {
+        row.classList.remove('swipe-content');
+        row.style.removeProperty('transform');
+        row.style.removeProperty('transition');
+        delete row.dataset.swiped;
+      });
+      prepareSwipeItems();
+      prepareCapitalSwipeItems();
+    }
+
     restoreAppSnapshot();
-    prepareSwipeItems();
-    prepareCapitalSwipeItems();
+    rebuildSwipeInteractions();
     document.addEventListener('click', event => {
       if (!event.target.closest('.swipe-item')) closeSwipeItems();
     });
@@ -2832,7 +2851,11 @@
     document.querySelectorAll('.fund-input').forEach(bindFundInput);
     document.querySelectorAll('input[inputmode="decimal"], input[inputmode="numeric"]').forEach(input => {
       input.addEventListener('focus', () => {
-        if (input.value) window.setTimeout(() => input.select(), 0);
+        if (parseLocalizedMoney(input.value) === 0) {
+          input.value = '';
+          return;
+        }
+        window.setTimeout(() => input.select(), 0);
       });
     });
     applyPlanEnabled(readStorage('budget-plan-enabled', true) !== false, false);
@@ -2896,8 +2919,12 @@
       if (document.hidden) {
         persistAppSnapshot();
         if (readStorage('budget-security-enabled', false) === true) appLock.classList.add('active');
-      } else ensureCurrentPeriod();
+      } else {
+        ensureCurrentPeriod();
+        window.setTimeout(rebuildSwipeInteractions, 0);
+      }
     });
+    window.addEventListener('pageshow', () => window.setTimeout(rebuildSwipeInteractions, 0));
     persistAppSnapshot();
 
     document.querySelectorAll('[data-add-category]').forEach(button => {
