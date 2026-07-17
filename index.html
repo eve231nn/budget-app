@@ -569,6 +569,13 @@
     .settings-status { padding: 16px; background: #e9eae7; border-radius: 8px; }
     .settings-status strong { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weight: 400; }
     .settings-status span { display: block; margin-top: 6px; color: var(--muted); font-size: 9px; line-height: 1.5; }
+    .app-lock { position: fixed; inset: 0; z-index: 1000; display: none; place-items: center; padding: 28px; color: white; background: var(--summary-gradient); }
+    .app-lock.active { display: grid; }
+    .app-lock-content { width: min(320px, 100%); text-align: center; }
+    .app-lock-mark { width: 62px; height: 62px; margin: 0 auto 22px; border: 1px solid rgba(255,255,255,.38); border-radius: 50%; display: grid; place-items: center; font-family: Georgia, serif; font-size: 28px; }
+    .app-lock h2 { margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 400; }
+    .app-lock p { margin: 10px 0 24px; color: rgba(255,255,255,.68); font-size: 11px; line-height: 1.5; }
+    .app-lock button { width: 100%; height: 50px; border: 0; border-radius: 8px; color: var(--dark); background: white; font-weight: 700; cursor: pointer; }
 
     .category-list { border-top: 1px solid var(--line); overflow: hidden; }
     .swipe-item {
@@ -1022,7 +1029,7 @@
                 </button>
                 <div class="balance-block">
                   <div class="balance-label">Баланс</div>
-                  <div class="balance" id="balanceValue">487 851,75 ₽</div>
+                  <div class="balance" id="balanceValue">0,00 ₽</div>
                 </div>
 
                 <div class="quick-actions">
@@ -1045,11 +1052,11 @@
                 <div class="section-title plan-title"><h2>План расходов на месяц</h2><span id="planPeriod">Июль 2026</span></div>
                 <section class="month-plan" aria-label="План расходов на июль">
                   <div class="plan-summary">
-                    <div><strong id="planTotal">96 000 ₽</strong></div>
+                    <div><strong id="planTotal">0 ₽</strong></div>
                     <span class="budget-badge" id="planStatus">План активен</span>
                   </div>
                   <div class="progress"><span id="planProgress"></span></div>
-                  <div class="plan-meta"><span>Потрачено <b id="planSpent">0 ₽</b></span><span>Осталось <b id="planRemaining">96 000 ₽</b></span></div>
+                  <div class="plan-meta"><span>Потрачено <b id="planSpent">0 ₽</b></span><span>Осталось <b id="planRemaining">0 ₽</b></span></div>
                 </section>
 
                 <button class="statistics-link" id="openStatistics" aria-label="Открыть статистику">
@@ -1096,12 +1103,12 @@
 
               <div class="tab-panel active" id="expense-panel">
                 <div class="category-list" id="expenseList">
-                  <div class="category-row"><span class="category-symbol">П</span><span class="category-copy"><strong>Продукты и химия</strong></span><input class="amount-input plan-input" value="40 000 ₽" readonly tabindex="-1" /></div>
-                  <div class="category-row"><span class="category-symbol">Ж</span><span class="category-copy"><strong>ЖКХ и связь</strong></span><input class="amount-input plan-input" value="10 000 ₽" readonly tabindex="-1" /></div>
-                  <div class="category-row"><span class="category-symbol">А</span><span class="category-copy"><strong>Автомобиль</strong></span><input class="amount-input plan-input" value="20 000 ₽" readonly tabindex="-1" /></div>
-                  <div class="category-row"><span class="category-symbol">З</span><span class="category-copy"><strong>Здоровье и спорт</strong></span><input class="amount-input plan-input" value="10 000 ₽" readonly tabindex="-1" /></div>
-                  <div class="category-row"><span class="category-symbol">О</span><span class="category-copy"><strong>Отдых</strong></span><input class="amount-input plan-input" value="10 000 ₽" readonly tabindex="-1" /></div>
-                  <div class="category-row"><span class="category-symbol">К</span><span class="category-copy"><strong>Кошка</strong></span><input class="amount-input plan-input" value="6 000 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">П</span><span class="category-copy"><strong>Продукты и химия</strong></span><input class="amount-input plan-input" value="0 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">Ж</span><span class="category-copy"><strong>ЖКХ и связь</strong></span><input class="amount-input plan-input" value="0 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">А</span><span class="category-copy"><strong>Автомобиль</strong></span><input class="amount-input plan-input" value="0 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">З</span><span class="category-copy"><strong>Здоровье и спорт</strong></span><input class="amount-input plan-input" value="0 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">О</span><span class="category-copy"><strong>Отдых</strong></span><input class="amount-input plan-input" value="0 ₽" readonly tabindex="-1" /></div>
+                  <div class="category-row"><span class="category-symbol">К</span><span class="category-copy"><strong>Кошка</strong></span><input class="amount-input plan-input" value="0 ₽" readonly tabindex="-1" /></div>
                   <button class="add-list-row" data-add-category="expense" aria-label="Добавить статью расхода">
                     <span class="add-category"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span>Добавить статью расхода</span>
                   </button>
@@ -1142,8 +1149,8 @@
 
               <div class="settings-subpage" id="settingsSecurityPage">
                 <div class="page-top"><button class="back-button" data-settings-back aria-label="Вернуться в настройки" title="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><div class="page-heading"><span>Настройки</span><h1>Безопасность</h1></div></div>
-                <div class="plan-toggle-row"><div><strong>Защищать приложение</strong><span>В версии для iPhone вход будет подтверждаться через Face ID</span></div><label class="switch" aria-label="Защищать приложение"><input type="checkbox" id="securityToggle" /><span class="switch-track"></span></label></div>
-                <p class="settings-note">В браузерном прототипе Face ID недоступен. Переключатель сохраняет выбранную настройку для будущей нативной версии.</p>
+                <div class="plan-toggle-row"><div><strong>Защищать приложение</strong><span>Подтверждать вход через Face ID или код-пароля iPhone</span></div><label class="switch" aria-label="Защищать приложение"><input type="checkbox" id="securityToggle" /><span class="switch-track"></span></label></div>
+                <p class="settings-note" id="securityNote">При включении iPhone предложит создать защищённый ключ входа.</p>
               </div>
             </section>
 
@@ -1159,7 +1166,7 @@
 
                   <section class="investment-summary" aria-label="Общая сумма капитала">
                     <span>Капитал</span>
-                    <strong id="investmentTotal">7 779 007 ₽</strong>
+                    <strong id="investmentTotal">0 ₽</strong>
                     <small>Активы за вычетом пассивов</small>
                   </section>
 
@@ -1178,11 +1185,11 @@
                     </button>
                   </div>
                   <div class="fund-list" id="fundList">
-                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">С</span><span class="asset-copy"><strong>Карта Сбер</strong><span>Банковская карта</span></span><input class="fund-input" value="41 313,78 ₽" readonly tabindex="-1" /></div>
-                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">Т</span><span class="asset-copy"><strong>Карта Тинькофф</strong><span>Основная карта</span></span><input class="fund-input" value="379 029,19 ₽" readonly tabindex="-1" /></div>
-                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">З</span><span class="asset-copy"><strong>Карта зарплаты</strong><span>Зарплатная карта</span></span><input class="fund-input" value="68,56 ₽" readonly tabindex="-1" /></div>
-                    <div class="fund-row" data-kind="Наличные"><span class="asset-icon">Н</span><span class="asset-copy"><strong>Наличные дома</strong><span>Место хранения: дом</span></span><input class="fund-input" value="67 535,00 ₽" readonly tabindex="-1" /></div>
-                    <div class="fund-row" data-kind="Корректировка"><span class="asset-icon">±</span><span class="asset-copy"><strong>Корректировка</strong><span>Остаток к уточнению</span></span><input class="fund-input" value="−94,78 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">С</span><span class="asset-copy"><strong>Карта Сбер</strong><span>Банковская карта</span></span><input class="fund-input" value="0,00 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">Т</span><span class="asset-copy"><strong>Карта Тинькофф</strong><span>Основная карта</span></span><input class="fund-input" value="0,00 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Карта"><span class="asset-icon">З</span><span class="asset-copy"><strong>Карта зарплаты</strong><span>Зарплатная карта</span></span><input class="fund-input" value="0,00 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Наличные"><span class="asset-icon">Н</span><span class="asset-copy"><strong>Наличные дома</strong><span>Место хранения: дом</span></span><input class="fund-input" value="0,00 ₽" readonly tabindex="-1" /></div>
+                    <div class="fund-row" data-kind="Корректировка"><span class="asset-icon">±</span><span class="asset-copy"><strong>Корректировка</strong><span>Остаток к уточнению</span></span><input class="fund-input" value="0,00 ₽" readonly tabindex="-1" /></div>
                   </div>
 
                   <div class="broker-heading">
@@ -1215,16 +1222,16 @@
                   </div>
 
                   <div class="broker-list" id="brokerList">
-                    <button class="broker-row" data-name="Тинькофф" data-symbol="Т" data-value="724 061 ₽">
+                    <button class="broker-row" data-name="Тинькофф" data-symbol="Т" data-value="0 ₽">
                       <span class="broker-logo">Т</span>
                       <span class="broker-name"><strong>Тинькофф</strong></span>
-                      <span class="broker-value"><strong>724 061 ₽</strong></span>
+                      <span class="broker-value"><strong>0 ₽</strong></span>
                       <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
                     </button>
-                    <button class="broker-row" data-name="Финам" data-symbol="Ф" data-value="304 946 ₽">
+                    <button class="broker-row" data-name="Финам" data-symbol="Ф" data-value="0 ₽">
                       <span class="broker-logo">Ф</span>
                       <span class="broker-name"><strong>Финам</strong></span>
-                      <span class="broker-value"><strong>304 946 ₽</strong></span>
+                      <span class="broker-value"><strong>0 ₽</strong></span>
                       <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
                     </button>
                     <button class="broker-row" data-name="Сбер" data-symbol="С" data-value="0 ₽">
@@ -1241,10 +1248,10 @@
                     </button>
                   </div>
                   <div class="asset-list" id="assetList">
-                    <div class="asset-row" data-value="5000000"><span class="asset-icon">К</span><span class="asset-copy"><strong>Квартира</strong><span>Недвижимость</span></span><strong class="asset-value">5 000 000 ₽</strong></div>
-                    <div class="asset-row" data-value="1250000"><span class="asset-icon">А</span><span class="asset-copy"><strong>Автомобиль</strong><span>Личный транспорт</span></span><strong class="asset-value">1 250 000 ₽</strong></div>
-                    <div class="asset-row" data-value="180000"><span class="asset-icon">К</span><span class="asset-copy"><strong>Компьютер</strong><span>Техника</span></span><strong class="asset-value">180 000 ₽</strong></div>
-                    <div class="asset-row" data-value="320000"><span class="asset-icon">Д</span><span class="asset-copy"><strong>Драгоценности</strong><span>Личные ценности</span></span><strong class="asset-value">320 000 ₽</strong></div>
+                    <div class="asset-row" data-value="0"><span class="asset-icon">К</span><span class="asset-copy"><strong>Квартира</strong><span>Недвижимость</span></span><strong class="asset-value">0 ₽</strong></div>
+                    <div class="asset-row" data-value="0"><span class="asset-icon">А</span><span class="asset-copy"><strong>Автомобиль</strong><span>Личный транспорт</span></span><strong class="asset-value">0 ₽</strong></div>
+                    <div class="asset-row" data-value="0"><span class="asset-icon">К</span><span class="asset-copy"><strong>Компьютер</strong><span>Техника</span></span><strong class="asset-value">0 ₽</strong></div>
+                    <div class="asset-row" data-value="0"><span class="asset-icon">Д</span><span class="asset-copy"><strong>Драгоценности</strong><span>Личные ценности</span></span><strong class="asset-value">0 ₽</strong></div>
                   </div>
                 </div>
 
@@ -1451,19 +1458,20 @@
                 <button data-stats-period="monthly">По месяцам</button>
               </div>
               <div class="stats-total-row">
-                <div class="stats-total" id="statsTotal">3 057 547 ₽</div>
+                <div class="stats-total" id="statsTotal">0 ₽</div>
               </div>
               <div class="stats-caption" id="statsCaption">Итого за 2026 год</div>
               <div class="stats-content">
                 <div class="stats-annual" id="statsAnnual">
-                  <div class="stats-annual-item"><span>Среднее в месяц</span><strong class="stats-value" id="statsAverage">509 591 ₽</strong></div>
-                  <div class="stats-annual-item"><span id="statsPeakLabel">Лучший месяц</span><strong class="stats-value" id="statsBest">Июнь · 1 932 740 ₽</strong></div>
+                  <div class="stats-annual-item"><span>Среднее в месяц</span><strong class="stats-value" id="statsAverage">0 ₽</strong></div>
+                  <div class="stats-annual-item"><span id="statsPeakLabel">Лучший месяц</span><strong class="stats-value" id="statsBest">Нет данных</strong></div>
                 </div>
                 <div class="monthly-chart" id="monthlyChart"></div>
               </div>
             </div>
           </div>
           <div class="toast" id="toast">План сохранён</div>
+          <div class="app-lock" id="appLock" role="dialog" aria-modal="true" aria-label="Приложение заблокировано"><div class="app-lock-content"><div class="app-lock-mark">B</div><h2>Личный бюджет</h2><p>Подтвердите вход с помощью Face ID или код-пароля iPhone.</p><button id="unlockApp">Разблокировать</button></div></div>
         </div>
       </div>
 
@@ -1472,7 +1480,7 @@
         <h1>Спокойный контроль над деньгами.</h1>
         <p>Премиальный интерфейс сдержанно показывает главное: баланс, быстрые операции, месячный план и структуру капитала. Данные и категории собраны из вашей книги Budget2026.xlsx.</p>
         <div class="data-note">
-          <div><span>Баланс</span><strong>487 851,75 ₽</strong></div>
+          <div><span>Баланс</span><strong>0,00 ₽</strong></div>
           <div><span>Доходы 2026</span><strong>3,06 млн ₽</strong></div>
           <div><span>Расходы 2026</span><strong>2,62 млн ₽</strong></div>
         </div>
@@ -1520,12 +1528,12 @@
 
     const statistics = {
       income: {
-        title: 'Статистика доходов', total: 3057547,
-        months: [323615, 291016, 280826, 337213, 396910, 1932740, 0, 0, 0, 0, 0, 0]
+        title: 'Статистика доходов', total: 0,
+        months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       },
       expense: {
-        title: 'Статистика расходов', total: 2623723,
-        months: [229214, 207950, 205780, 226848, 309042, 1444889, 0, 0, 0, 0, 0, 0]
+        title: 'Статистика расходов', total: 0,
+        months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       }
     };
     const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
@@ -1660,6 +1668,60 @@
 
     function writeStorage(key, value) {
       try { window.localStorage.setItem(key, JSON.stringify(value)); } catch {}
+    }
+
+    const DATA_VERSION = 4;
+    if (readStorage('budget-data-version', 0) !== DATA_VERSION) {
+      const oldKeys = [];
+      for (let index = 0; index < window.localStorage.length; index += 1) {
+        const key = window.localStorage.key(index);
+        if (key?.startsWith('budget-')) oldKeys.push(key);
+      }
+      oldKeys.forEach(key => window.localStorage.removeItem(key));
+      writeStorage('budget-data-version', DATA_VERSION);
+    }
+
+    function captureRows(listSelector, rowSelector) {
+      return [...document.querySelectorAll(`${listSelector} ${rowSelector}`)].map(row => {
+        row.querySelectorAll('input').forEach(input => input.setAttribute('value', input.value));
+        return row.outerHTML;
+      });
+    }
+
+    function persistAppSnapshot() {
+      writeStorage('budget-ui-snapshot', {
+        funds: captureRows('#fundList', '.fund-row'),
+        brokers: captureRows('#brokerList', '.broker-row'),
+        savings: captureRows('#savingsList', '.broker-row'),
+        assets: captureRows('#assetList', '.asset-row'),
+        liabilities: captureRows('#liabilityList', '.liability-row'),
+        loans: captureRows('#loanList', '.loan-row'),
+        expenses: captureRows('#expenseList', '.category-row'),
+        incomes: captureRows('#incomeList', '.income-row')
+      });
+    }
+
+    function restoreRows(listSelector, rowSelector, rows, beforeSelector = '') {
+      if (!Array.isArray(rows)) return;
+      const list = document.querySelector(listSelector);
+      list.querySelectorAll(rowSelector).forEach(row => row.closest('.swipe-item')?.remove() || row.remove());
+      const anchor = beforeSelector ? list.querySelector(beforeSelector) : null;
+      rows.forEach(html => anchor ? anchor.insertAdjacentHTML('beforebegin', html) : list.insertAdjacentHTML('beforeend', html));
+    }
+
+    function restoreAppSnapshot() {
+      const snapshot = readStorage('budget-ui-snapshot', null);
+      if (!snapshot) return;
+      restoreRows('#fundList', '.fund-row', snapshot.funds);
+      restoreRows('#brokerList', '.broker-row', snapshot.brokers);
+      restoreRows('#savingsList', '.broker-row', snapshot.savings);
+      restoreRows('#assetList', '.asset-row', snapshot.assets);
+      restoreRows('#liabilityList', '.liability-row', snapshot.liabilities);
+      restoreRows('#loanList', '.loan-row', snapshot.loans);
+      restoreRows('#expenseList', '.category-row', snapshot.expenses, '.add-list-row');
+      restoreRows('#incomeList', '.income-row', snapshot.incomes, '.add-list-row');
+      categories.expense = [...document.querySelectorAll('#expenseList .category-copy strong')].map(item => item.textContent.trim());
+      categories.income = [...document.querySelectorAll('#incomeList .category-copy strong')].map(item => item.textContent.trim());
     }
 
     function applyPlanEnabled(enabled, persist = true) {
@@ -2062,11 +2124,64 @@
       }
     });
     const securityToggle = document.getElementById('securityToggle');
+    const securityNote = document.getElementById('securityNote');
+    const appLock = document.getElementById('appLock');
+    const bytesToBase64 = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const base64ToBytes = value => Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=')), character => character.charCodeAt(0));
+
+    async function registerDeviceProtection() {
+      if (!window.PublicKeyCredential || !window.isSecureContext) throw new Error('WebAuthn unavailable');
+      const userId = crypto.getRandomValues(new Uint8Array(32));
+      const credential = await navigator.credentials.create({ publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: 'Личный бюджет' },
+        user: { id: userId, name: 'owner', displayName: 'Владелец' },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+        timeout: 60000,
+        attestation: 'none'
+      }});
+      writeStorage('budget-security-credential', bytesToBase64(credential.rawId));
+      writeStorage('budget-security-enabled', true);
+    }
+
+    async function unlockWithDevice() {
+      const credentialId = readStorage('budget-security-credential', '');
+      if (!credentialId) return;
+      await navigator.credentials.get({ publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ type: 'public-key', id: base64ToBytes(credentialId), transports: ['internal'] }],
+        userVerification: 'required', timeout: 60000
+      }});
+      appLock.classList.remove('active');
+    }
+
     securityToggle.checked = readStorage('budget-security-enabled', false) === true;
-    securityToggle.addEventListener('change', () => {
-      writeStorage('budget-security-enabled', securityToggle.checked);
-      showToast(securityToggle.checked ? 'Защита включена' : 'Защита выключена');
+    securityToggle.addEventListener('change', async () => {
+      if (!securityToggle.checked) {
+        writeStorage('budget-security-enabled', false);
+        writeStorage('budget-security-credential', '');
+        securityNote.textContent = 'Защита приложения выключена.';
+        showToast('Защита выключена');
+        return;
+      }
+      securityToggle.disabled = true;
+      try {
+        await registerDeviceProtection();
+        securityNote.textContent = 'Защита настроена. При следующем открытии потребуется подтверждение.';
+        showToast('Защита включена');
+      } catch (error) {
+        securityToggle.checked = false;
+        securityNote.textContent = 'Не удалось включить защиту. Откройте установленное приложение по HTTPS и повторите.';
+        showToast('Защита не включена');
+      } finally {
+        securityToggle.disabled = false;
+      }
     });
+    document.getElementById('unlockApp').addEventListener('click', async () => {
+      try { await unlockWithDevice(); } catch (error) { showToast('Не удалось подтвердить вход'); }
+    });
+    if (securityToggle.checked && readStorage('budget-security-credential', '')) appLock.classList.add('active');
     document.getElementById('openInvestments').addEventListener('click', () => {
       viewport.classList.remove('settings-open', 'statistics-open');
       viewport.classList.add('investments-open');
@@ -2678,6 +2793,7 @@
       });
     }
 
+    restoreAppSnapshot();
     prepareSwipeItems();
     prepareCapitalSwipeItems();
     document.addEventListener('click', event => {
@@ -2718,12 +2834,37 @@
     Object.entries(readStorage('budget-broker-history', {})).forEach(([name, entries]) => brokerHistory.set(name, Array.isArray(entries) ? entries : []));
     transactionLedger = readStorage('budget-transaction-ledger', []);
     if (!Array.isArray(transactionLedger)) transactionLedger = [];
+    if (!readStorage('budget-ui-snapshot', null) && transactionLedger.length) {
+      transactionLedger.slice().reverse().forEach(entry => {
+        const row = [...document.querySelectorAll('.fund-row')].find(item => item.querySelector('.asset-copy strong').textContent.trim() === entry.account);
+        if (!row) return;
+        const input = row.querySelector('.fund-input');
+        const current = parseLocalizedMoney(input.value);
+        input.value = formatMoneyCents(entry.type === 'income' ? current + Number(entry.amount || 0) : current - Number(entry.amount || 0));
+      });
+    }
     populateStatisticsYears();
     updateBalance();
     loadMonthlyPlanState();
     window.setInterval(ensureCurrentPeriod, 60000);
     window.addEventListener('focus', ensureCurrentPeriod);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) ensureCurrentPeriod(); });
+    let snapshotTimer = 0;
+    const scheduleSnapshot = (delay = 80) => {
+      window.clearTimeout(snapshotTimer);
+      snapshotTimer = window.setTimeout(persistAppSnapshot, delay);
+    };
+    document.addEventListener('click', () => scheduleSnapshot(450));
+    document.addEventListener('change', () => scheduleSnapshot());
+    document.addEventListener('input', () => scheduleSnapshot());
+    window.addEventListener('pagehide', persistAppSnapshot);
+    window.addEventListener('beforeunload', persistAppSnapshot);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        persistAppSnapshot();
+        if (readStorage('budget-security-enabled', false) === true) appLock.classList.add('active');
+      } else ensureCurrentPeriod();
+    });
+    persistAppSnapshot();
 
     document.querySelectorAll('[data-add-category]').forEach(button => {
       button.addEventListener('click', () => {
